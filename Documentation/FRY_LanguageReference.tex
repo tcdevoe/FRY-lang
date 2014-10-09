@@ -1,7 +1,7 @@
 \documentclass{article}
 \usepackage{listings}
 \usepackage{color}
-\usepackage[margin=0.75in]{geometry}
+\usepackage{hyperref}
 
 % Default fixed font does not support bold face
 \DeclareFixedFont{\ttb}{T1}{txtt}{bx}{n}{10} % for bold
@@ -33,10 +33,62 @@ breaklines=true
 \begin{document}
 \maketitle
 
+\tableofcontents
+
 \section{Introduction}
+This document serves as a reference manual for the \textbf{FRY} Programming Language. 
+
 
 \section{Lexical Conventions}
 % In C sections are Tokens, Comments, Identifiers, Keywords, Constants
+
+\subsection{Comments}
+Single line comments are denoted by the character, \texttt{\#}. Multi-line comments are opened with \texttt{\#/} and closed with \texttt{/\#}
+
+\subsection{Identifiers}
+An identifier is a string of letters, digits, and underscores. A valid identifier begins with an letter or an underscore. Identifiers are case-sensitive and can be at most 31 characters long.
+
+\subsection{Keywords}
+
+The following identifiers are reserved and cannot be used otherwise:
+
+\vspace{5 mm}
+\texttt{%
+\begin{tabular}{ l l l l }
+int & str & float & bool  \\
+Record & Array & Table & if \\
+else & elif & in & Sort \\
+trans
+\end{tabular}
+}
+
+\subsection{Constants}
+There is a constant corresponding to each Primitive data type mentioned in \ref{sec:prims}.
+
+\section{Types}
+\subsection{Primitive Types}
+\label{sec:prims}
+\begin{itemize}
+% Add in some examples after each 
+\item \texttt{int} - 64-bit signed integer value
+
+\item \texttt{str} - An ASCII text value
+
+\item \texttt{float} - A double precision floating-point number
+
+\item \texttt{bool} - A boolean value. Can be either \texttt{true} or \texttt{false}
+
+\end{itemize}
+
+\subsection{Compound Types}
+
+\begin{itemize} 
+
+\item \texttt{Array} - an ordered collection elements of the same data type.
+% Work on Record phrasing
+\item \texttt{Record} - a named collection of variables. Records behaves similar to structs in C.
+
+\end{itemize}
 
 \section{Meaning of Identifiers}
 
