@@ -1,0 +1,63 @@
+\documentclass{article}
+\usepackage{listings}
+\usepackage{color}
+\usepackage[margin=0.75in]{geometry}
+
+% Default fixed font does not support bold face
+\DeclareFixedFont{\ttb}{T1}{txtt}{bx}{n}{10} % for bold
+\DeclareFixedFont{\ttm}{T1}{txtt}{m}{n}{10}  % for normal
+
+\definecolor{deepblue}{rgb}{0,0,0.5}
+\definecolor{deepred}{rgb}{0.6,0,0}
+\definecolor{deepgreen}{rgb}{0,0.5,0}
+\definecolor{codebg}{gray}{0.9}
+\definecolor{comment}{gray}{0.4}
+
+\lstset{
+backgroundcolor=\color{codebg},
+language=Python,
+basicstyle=\ttm,
+commentstyle=\color{comment}\ttm,
+otherkeywords={Join, Sort, delim, Read, Write, ret },             % Add keywords here
+keywordstyle=\ttb\color{deepblue},
+stringstyle=\color{deepgreen},
+frame=tb,                         % Any extra options here
+showstringspaces=false,            
+breaklines=true
+}
+
+\title{FRY Language Reference}
+\author{Tom DeVoe \\ tcd2123@columbia.edu}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\section{Introduction}
+
+\section{Lexical Conventions}
+% In C sections are Tokens, Comments, Identifiers, Keywords, Constants
+
+\section{Meaning of Identifiers}
+
+\section{Conversions}
+% Describes conversion between types
+
+\section{Expressions}
+% Describes precedence of expression operators 
+% Different types of expressions (Primary expression - a + b ; Postfix Expression - a++, etc.)
+% Function Calls, Structure Referenxces (struct, union)
+% Multiplicative/Additive Operators, conditional or, comma operator, etc. (other operators)
+
+\section{Declarations}
+% Type specifiers, struct union declarations, etc.
+
+
+\section{Statements}
+% Expression Statements, Flow Control, Iteration Stmt (for, while)
+
+\section{Scope}
+
+
+
+\end{document}
