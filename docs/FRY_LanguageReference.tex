@@ -1,7 +1,7 @@
 \documentclass{article}
 \usepackage{listings}
 \usepackage{color}
-\usepackage[margin=0.75in]{geometry}
+\usepackage{hyperref}
 
 % Default fixed font does not support bold face
 \DeclareFixedFont{\ttb}{T1}{txtt}{bx}{n}{10} % for bold
@@ -18,7 +18,7 @@ backgroundcolor=\color{codebg},
 language=Python,
 basicstyle=\ttm,
 commentstyle=\color{comment}\ttm,
-otherkeywords={Join, Sort, delim, Read, Write, ret },             % Add keywords here
+otherkeywords={Join, Sort, delim, Read, Write, ret, Layout, List, Table, true, false },             % Add keywords here
 keywordstyle=\ttb\color{deepblue},
 stringstyle=\color{deepgreen},
 frame=tb,                         % Any extra options here
@@ -33,21 +33,125 @@ breaklines=true
 \begin{document}
 \maketitle
 
+\tableofcontents
+
 \section{Introduction}
+This document serves as a reference manual for the \textbf{FRY} Programming Language. \textbf{FRY} is a language designed for processing delimited text files.
+
 
 \section{Lexical Conventions}
 % In C sections are Tokens, Comments, Identifiers, Keywords, Constants
 
-\section{Meaning of Identifiers}
+\subsection{Comments}
+Single line comments are denoted by the character, \texttt{\#}. Multi-line comments are opened with \texttt{\#/} and closed with \texttt{/\#}. 
+\\
+\\
+\texttt{\# This is a single line comment}
+\\
+\\
+\texttt{\#/ This is a 
+\\
+				multi-line comment /\#}
+\subsection{Identifiers}
+An identifier is a string of letters, digits, and underscores. A valid identifier begins with an letter or an underscore. Identifiers are case-sensitive and can be at most 31 characters long.
 
-\section{Conversions}
-% Describes conversion between types
+\subsection{Keywords}
+
+The following identifiers are reserved and cannot be used otherwise:
+
+\vspace{5 mm}
+\texttt{%
+\begin{tabular}{ l l l l l }
+int & str & float & bool  & Layout \\
+List & Table & if & else & elif \\
+in & Sort \\
+\end{tabular}
+}
+
+\subsection{Constants}
+There is a constant corresponding to each Primitive data type mentioned in \ref{sec:prims}.
+
+\begin{itemize}
+\item \textbf{Integer Constants} - Integer constants are whole base-10 numbers represented by a series of numerical digits (0 - 9). 
+\begin{lstlisting}
+# Integer Constant Examples
+int x = 312342
+int y = 111111112
+int z = 8
+\end{lstlisting}
+
+\item \textbf{Float Constants} - Float constants are similar to Integer constants in that they are base-10 numbers represented by a series of numerical digits. However, floats can also include a decimal separator.
+\begin{lstlisting}
+# Float Constant Examples
+float f1 = 1.158472
+float f2 = 2457.89
+float f3 = 19999.999999
+\end{lstlisting}
+
+\item \textbf{String Constants} - String constants are represented by a series of ASCII characters surrounded by quotation-marks. Certain characters can be escaped inside of Strings with a backslash \textbf{'\'}. These characters are:
+
+\begin{tabular}{ l | l | l }
+\textbf{Character} & \textbf{Meaning} \\
+\texttt{\textbackslash n } & Newline \\
+\texttt{\textbackslash t} & Tab \\
+\texttt{\textbackslash  \textbackslash} & Backslash \\
+\texttt{\textbackslash " } & Double Quotes \\
+\end{tabular}
+\\
+\begin{lstlisting}
+# String Constant Examples
+str s1 = "This is \t a string\n"
+str s2 = "This. is. also-a-\"string!\""
+str s3 = "42"
+\end{lstlisting}
+
+\item \textbf{Boolean Constants} - Boolean constants can either have the case-sensitive value \emph{true} or \emph{false}.
+\begin{lstlisting}
+# Boolean Constant Examples
+bool b1 = true
+bool b2 = false
+\end{lstlisting}
+
+\end{itemize}
+
+\subsection{Types}
+\subsubsection{Primitive Types}
+\label{sec:prims}
+\begin{itemize}
+% Add in some examples after each 
+\item \texttt{int} - 64-bit signed integer value
+
+\item \texttt{str} - An ASCII text value
+
+\item \texttt{float} - A double precision floating-point number
+
+\item \texttt{bool} - A boolean value. Can be either \texttt{true} or \texttt{false}
+
+\end{itemize}
+
+\subsubsection{Compound Types}
+
+\begin{itemize} 
+
+\item \texttt{List} - an ordered collection of elements of the same data type. Every column in a \emph{Table} is represented as a List
+
+\item \texttt{Layout} - a collection of named data types. Layouts behave similar to structs from C. Once a Layout is constructed, that layout may be used as a data type.  An instance of a Layout is referred to as a \emph{Record} and every table is made up of records of the Layout which corresponds to that table.
+
+\item \texttt{Table} - a representation of a relational table. Every column in a table can be treated as a \emph{List} and every row is a record of a certain \emph{Layout}. Tables are the meat and potatoes of \textbf{FRY} and will be the focus of most programs.
+
+\end{itemize}
+
+%%% TODO: ADD IN MORE DESCRIPTIONS ABOUT COMPOUND DATA TYPES - MAYBE GIVE THEM A SEPARATE SECTION %%%
 
 \section{Expressions}
 % Describes precedence of expression operators 
 % Different types of expressions (Primary expression - a + b ; Postfix Expression - a++, etc.)
 % Function Calls, Structure Referenxces (struct, union)
 % Multiplicative/Additive Operators, conditional or, comma operator, etc. (other operators)
+An expression in \textbf{FRY} is a combination of variables, operators, constants, and functions.
+%% TODO: Add more to intro %%
+\subsection{Primary Expressions}
+Primary Expressions are identifiers, constants or 
 
 \section{Declarations}
 % Type specifiers, struct union declarations, etc.
