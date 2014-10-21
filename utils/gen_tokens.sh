@@ -1,4 +1,6 @@
 #!/bin/bash
+# This script automatically takes all of the tokens defined in scanner.mll 
+# and populates parser.mly with those tokens
 
 # FRY src dir is in the level above utils
 tokens=$(cat ${FRY_ROOT}/src/scanner.mll | grep -oP "{ (.*) }" | sed 's/{//g' | sed 's/}//g')
@@ -14,6 +16,12 @@ for token in $tokens; do
     fi
 done
 
-out_tokens=$(echo -e $out | tail -n +2)
+echo -e $out | tail -n +2 > tmp_file
 
+lead='^(\* start tokens \*)'
+tail='^(\* end tokens \*)'
 
+sed -e "/$lead/,/$tail/{ /$lead/{p; r tmp_file
+ }; /$tail/p; d }" $FRY_ROOT/src/parser.mly
+
+rm -f tmp_file
