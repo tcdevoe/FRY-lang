@@ -2,6 +2,7 @@
 \usepackage{listings}
 \usepackage{color}
 \usepackage{hyperref}
+\usepackage{fixltx2e}
 
 % Default fixed font does not support bold face
 \DeclareFixedFont{\ttb}{T1}{txtt}{bx}{n}{10} % for bold
@@ -25,6 +26,8 @@ frame=tb,                         % Any extra options here
 showstringspaces=false,            
 breaklines=true
 }
+
+
 
 \title{FRY Language Reference}
 \author{Tom DeVoe \\ tcd2123@columbia.edu}
@@ -64,31 +67,21 @@ The following identifiers are reserved and cannot be used otherwise:
 \begin{tabular}{ l l l l l }
 int & str & float & bool  & Layout \\
 List & Table & if & else & elif \\
-in & Sort \\
+in & Sort & not & typeof & and \\
+or & 
 \end{tabular}
 }
 
 \subsection{Constants}
+\label{sec:const}
 There is a constant corresponding to each Primitive data type mentioned in \ref{sec:prims}.
 
 \begin{itemize}
-\item \textbf{Integer Constants} - Integer constants are whole base-10 numbers represented by a series of numerical digits (0 - 9). 
-\begin{lstlisting}
-# Integer Constant Examples
-int x = 312342
-int y = 111111112
-int z = 8
-\end{lstlisting}
+\item \textbf{Integer Constants} - Integer constants are whole base-10 numbers represented by a series of numerical digits (0 - 9) and an optional leading sign character($+$ or $-$). Absence of a sign character implies a positive number.
 
-\item \textbf{Float Constants} - Float constants are similar to Integer constants in that they are base-10 numbers represented by a series of numerical digits. However, floats can also include a decimal separator.
-\begin{lstlisting}
-# Float Constant Examples
-float f1 = 1.158472
-float f2 = 2457.89
-float f3 = 19999.999999
-\end{lstlisting}
+\item \textbf{Float Constants} - Float constants are similar to Integer constants in that they are base-10 numbers represented by a series of numerical digits. However, floats must include a decimal separator and optionally, a fractional part. Can optionally include a sign character ($+$ or $-$). Absence of a sign character implies a positive number.
 
-\item \textbf{String Constants} - String constants are represented by a series of ASCII characters surrounded by quotation-marks. Certain characters can be escaped inside of Strings with a backslash \textbf{'\'}. These characters are:
+\item \textbf{String Constants} - String constants are represented by a series of ASCII characters surrounded by quotation-marks (\texttt{" "}). Certain characters can be escaped inside of Strings with a backslash \textbf{'\'}. These characters are:
 
 \begin{tabular}{ l | l | l }
 \textbf{Character} & \textbf{Meaning} \\
@@ -97,43 +90,31 @@ float f3 = 19999.999999
 \texttt{\textbackslash  \textbackslash} & Backslash \\
 \texttt{\textbackslash " } & Double Quotes \\
 \end{tabular}
-\\
-\begin{lstlisting}
-# String Constant Examples
-str s1 = "This is \t a string\n"
-str s2 = "This. is. also-a-\"string!\""
-str s3 = "42"
-\end{lstlisting}
 
 \item \textbf{Boolean Constants} - Boolean constants can either have the case-sensitive value \emph{true} or \emph{false}.
-\begin{lstlisting}
-# Boolean Constant Examples
-bool b1 = true
-bool b2 = false
-\end{lstlisting}
 
 \end{itemize}
 
+\section{Syntax Notation}
+Borrowing from the \emph{The C Programming Language} by Kernigan and Ritchie, syntactic categories are indicated by \emph{italic} type and literal words and characters in \texttt{typewriter} style. Optional tokens will be underscored by \textsubscript{\emph{opt}}.
+
+\section{Meaning of Identifiers}
 \subsection{Types}
-\subsubsection{Primitive Types}
+\label{sec:types}
+\subsubsection{Basic Types}
 \label{sec:prims}
 \begin{itemize}
-% Add in some examples after each 
 \item \texttt{int} - 64-bit signed integer value
-
 \item \texttt{str} - An ASCII text value
-
 \item \texttt{float} - A double precision floating-point number
-
 \item \texttt{bool} - A boolean value. Can be either \texttt{true} or \texttt{false}
-
 \end{itemize}
 
 \subsubsection{Compound Types}
 
 \begin{itemize} 
 
-\item \texttt{List} - an ordered collection of elements of the same data type. Every column in a \emph{Table} is represented as a List
+\item \texttt{List} - an ordered collection of elements of the same data type. Every column in a \emph{Table} is represented as a List. Lists can be initialized to an empty list or one full of values like so:
 
 \item \texttt{Layout} - a collection of named data types. Layouts behave similar to structs from C. Once a Layout is constructed, that layout may be used as a data type.  An instance of a Layout is referred to as a \emph{Record} and every table is made up of records of the Layout which corresponds to that table.
 
@@ -141,24 +122,292 @@ bool b2 = false
 
 \end{itemize}
 
-%%% TODO: ADD IN MORE DESCRIPTIONS ABOUT COMPOUND DATA TYPES - MAYBE GIVE THEM A SEPARATE SECTION %%%
+\section{Conversions}
+Certain operators can cause different basic data types to be converted between one another.
+\subsection{Integer and Floating}
+\subsection{Arithmetic Conversions}
+\subsection{String Conversions}
+% Automatic conversions when concatenating int,float with string
+
 
 \section{Expressions}
 % Describes precedence of expression operators 
 % Different types of expressions (Primary expression - a + b ; Postfix Expression - a++, etc.)
 % Function Calls, Structure Referenxces (struct, union)
 % Multiplicative/Additive Operators, conditional or, comma operator, etc. (other operators)
-An expression in \textbf{FRY} is a combination of variables, operators, constants, and functions.
+An expression in \textbf{FRY} is a combination of variables, operators, constants, and functions. The list of expressions below are listed in order of precedence. Every expression in a subsection shares the same precedence (ex. Identifiers and Constants have the same precedence).
 %% TODO: Add more to intro %%
 \subsection{Primary Expressions}
-Primary Expressions are identifiers, constants or 
+\begin{itshape}
+\begin{tabbing}
+	\= prima\=ry-expression : \\
+		\>\> identifier \\
+		\>\> constant \\ 
+		\>\> (expression)
+\end{tabbing}
+\end{itshape}
+Primary Expressions are either identifiers, constants, or parenthesized expressions. 
+\subsubsection{Identifiers}
+Identifiers types are specified during declaration by preceding that identifier by its type.  Identifiers can be used for any primitive or compound data types and any functions. 
+\subsubsection{Constants}
+Constants are either integer, string, float, or boolean constants as specified in \ref{sec:const}
+\subsubsection{Parenthesized Expressions}
+Parenthesized expression is simply an expression surrounded by parentheses. 
+
+\subsection{Postfix Expression}
+Operators in a postfix expression are grouped from left to right.
+\begin{itshape}
+\begin{tabbing}
+	\= post\=fix-expression : \\
+		\> \> primary-expression \\
+		\>\> postfix-expression[expression(:expression)\textsubscript{opt}] \\		
+		\>\> postfix-expression.\{expression(:expression)\textsubscript{opt}\}\\
+		\>\> postfix-expression(argument-list\textsubscript{opt}) \\ 
+		\> \> \emph{expression}$--$ \\
+		\> \> \emph{expression}$++$ 
+\end{tabbing}
+\end{itshape}
+
+\subsubsection{List Element Reference}
+A list identifier followed by square brackets with an integer-valued expression inside denotes referencing the element at that index in the List. For instance \lstinline!MyLst[5]! would reference the $6^\mathrm{th}$ element of the List, \emph{MyLst}. Similarly, \lstinline!MyLst[n]! would reference the $n-1^\mathrm{th}$ element of MyLst. The type of this element is the same as the type of elements the List you are accessing contains. \\
+Sublists can be returned by \emph{sliceing} the list. By specifying the optional colon (':') and indices before and/or after, the list is sliced and a sublist of the original list is returned. If there is an integer before the semi-colon and none after, then a sublist is returned spanning from the integer to the end of the list. If there is an integer after the colon and none before, the a sublist is returned spanning from the beginning of the list to the integer index. If there is an integer before and after the colon, then a sublist is returned spanning from the first integer index to the second integer index.
+
+\subsubsection{Layout Element Reference}
+\label{sec:layoutref}
+A layout identifier followed by a dot and an expression in braces ${ }$ references an element of a layout. The expression in the braces must either be \emph{(i)} the name of one of the member elements in the Layout you are accessing, such as \lstinline!MyLyt.{elem_name}! or \emph{(ii)} a integer reference to the $n^\mathrm{th}$ element of the Layout, i.e. \lstinline!MyLyt.{2}! would access the $1^\mathrm{st}$ member element. The type of the element returned will be the type that element was defined to be when the Layout was defined. If the member element you are accessing is itself a Layout, then the numeric and identifier references will both return a element of that Layout type. 
+Sublayouts can be returned by \emph{sliceing} the layout. Layout slicing syntax is mostly the same as the List slicing, except you can also specify element names as the indices on either side of the colon. This returns an instance of unamed layout type with unamed elements.
+
+\subsubsection{Function Calls}
+A function call consists of a function identifer, followed by parentheses with a possibly empty argument list contained. A copy is made of each object passed to the function, so the value of the original object will remained unchanged. Function declarations are discussed in \ref{sec:funcdec}.
+
+\subsubsection{$--$\emph{expression}}
+The double minus sign ('-') decrements an integer value by 1. The type of this expression must be integer.
+\subsubsection{++\emph{expression}}
+The double plus sign ('+') increments an integer value by 1. The type of this expression must be integer.
+
+\subsection{Unary Operators}
+Unary operators are grouped from right to left and include logical negation, incrementation, and decrementation operators.
+\begin{tabbing}
+	\= \emph{una}\=\emph{ry-expression :} \\
+		\> \> \emph{postfix-expression} \\
+		\>\> \texttt{not} \emph{unary-expression}\\
+		\>\> \texttt{typeof}(\emph{primary-expression})
+\end{tabbing}
+
+\subsubsection{\texttt{not} \emph{expression}}
+The \texttt{not} operator represents boolean negation. The type of the expression must be boolean.
+
+\subsubsection{\texttt{typeof}(\emph{expression})}
+The \texttt{typeof} operator returns the type of some identifier as a string.
+
+\subsection{Multiplicative Operators}
+These operators are grouped left to right.
+\begin{itshape}
+\begin{tabbing}
+	\= multipl\=icative-expression : \\
+		\>\> multiplicative-expression*multiplicative-expression \\		
+		\>\> multiplicative-expression/multiplicative-expression \\
+		\>\> multiplicative-expression/multiplicative-expression
+\end{tabbing}
+\end{itshape}
+
+$*$ denotes mutltiplication, $/$ denotes division, and $\%$ returns the remainder after division (also known as the modulo). The expressions on either side of these operators must be integer or floating point expressions. If the operand of $/$ or $\%$ is 0, the result is undefined.
+
+\subsection{Additive Operators}
+These operators are grouped left to right.
+\begin{itshape}
+\begin{tabbing}
+	\= addi\=tive-expression : \\
+		\> \> multiplicative-expression \\
+		\>\> additive-expression+additive-expression \\		
+		\>\> additive-expression-additive-expression
+\end{tabbing}
+\end{itshape}
+
+$+$ and $-$ denote addition and subtraction of the two operands respectively. Additionally the $+$ also denotes string concatenation. For $-$, the expressions on either side of the operators must be either integer or floating point valued. For $+$, the expressions can be integer, floating point or strings.
+
+\subsection{Containment Operators}
+\begin{tabbing}
+	\= \emph{cont}\=\emph{ainment-expression} : \\
+		\>\> \emph{additive-expression} \texttt{in} \emph{containment-expression} \\	
+		\>\> \emph{additive-expression} \texttt{not in} \emph{containment-expression} 
+\end{tabbing}
+The containment operators check whether an element is contained in a List. The right operand must be a List and the left operand must be the same type as the elements that List contains. Both operators return a boolean value. If the element is in the list, then \texttt{in} returns \texttt{true} and if the element is not in the list, it returns \texttt{false}. \texttt{not in} returns the opposite values.
+
+\subsection{Relational Operators}
+\begin{itshape}
+\begin{tabbing}
+	\= relat\=ional-expression : \\
+		\>\> additive-expression \\
+		\>\> relational-expression$>$relational-expression \\		
+		\>\> relational-expression$>=$relational-expression \\
+		\>\> relational-expression$<$relational-expression \\
+		\>\> relational-expression$<=$relational-expression 
+\end{tabbing}
+\end{itshape}
+
+$>$ represents greater than, $>=$ represents greater than or equal to, $<$ represents less than, and $<=$ represents less than or equal to. These operators all return a boolean value corresponding to whether the relation is \texttt{true} or \texttt{false}. The type of each side of the operator should be either integer or floating point.
+
+\subsection{Equality Operators}
+\begin{itshape}
+\begin{tabbing}
+	\= equa\=lity-expression : \\
+		\>\> relational-expression \\
+		\>\> equality-expression$==$equality-expression \\		
+		\>\> equality-expression$!=$equality-expression
+\end{tabbing}
+\end{itshape}
+The $==$ operator compares the equivalence of the two operands and returns the boolean value \texttt{true} if they are equal, \texttt{false} if they are not. $!=$ does the opposite, \texttt{true} if they are unequal, \texttt{false} if they are equal. The operands can be of any type - as long as they are both the same type.
+
+\subsection{Logical AND Operator}
+The logical AND operator is grouped left to right.
+\begin{tabbing}
+	\= \emph{logi}\=\emph{cal-AND-expression} : \\
+		\>\> \emph{equality-expression} \\
+		\>\> \emph{logical-AND-expression} \texttt{and} \emph{logical-AND-expression} 
+\end{tabbing}
+The logical \emph{and} operator (\texttt{and}) only allows for boolean valued operands. This operator returns the boolean value true if both operands are true and false otherwise. 
+
+\subsection{Logical OR Operator}
+The logical OR operator is grouped left to right.
+\begin{tabbing}
+	\= \emph{logi}\=\emph{cal-OR-expression} : \\
+		\>\> \emph{logical-AND-expression} \\
+		\>\> \emph{logical-OR-expression} \texttt{or} \emph{logical-OR-expression} 
+\end{tabbing}
+The logical \emph{or} operator (\texttt{or}) only allows for boolean valued operands. This operator returns the boolean false if both operands are false and true otherwise.
+
+\subsection{Assignment Expressions}
+Assignment operators are grouped right to left.
+\begin{itshape}
+\begin{tabbing}
+	\= assig\=nment-expression : \\
+		\>\> logical-OR-expression \\
+		\>\> primary-expression$=$assignment-expression 
+\end{tabbing}
+\end{itshape}
+Assignment operators expect a variable identifier on the left and a constant or variable of the same type on the right side.
+
 
 \section{Declarations}
 % Type specifiers, struct union declarations, etc.
 
+Declarations give the ability to define identifiers type and value.
+\begin{itshape}
+\begin{tabbing}
+	\= decla\=rations : \\
+		\> \> type-specifier declarator \\
+		\>\> type-specifier declarator = initializer \\
+\end{tabbing}
+\end{itshape}
+
+\subsection{Type Specifiers}
+The different \emph{type-specifiers} available are:
+
+\begin{tabbing}
+	\= \emph{type}\=\emph{-specifiers} : \\
+		\>\> \texttt{int} \\
+		\>\> \texttt{str} \\
+		\>\> \texttt{float} \\
+		\>\> \texttt{bool} \\
+		\>\> \texttt{List} \\
+		\>\> \texttt{Layout} \\
+		\>\> \texttt{Table} \\
+\end{tabbing}
+
+Exactly one type-specifier must be provided during a declaration. These types are described in more detail in \ref{sec:types}.
+
+\subsection{List Declarations}
+A List is an ordered collection of elements of the same type. 
+\begin{tabbing}
+	\= \emph{List}\=\emph{-intializers} : \\
+		\> \> \texttt{List} \emph{identifier} \\
+		\>\> \texttt{List} \emph{identifier} \texttt{= [} \emph{List-declaration-list } \texttt{]} 
+\end{tabbing}
+A List declaration consists of the keyword \texttt{List} followed by an identifier for the list and optionally followed by an assignment from a \emph{List-declaration-list} surrounded by square brackets.
+
+\begin{tabbing}
+	\= \emph{List}\=\emph{-declaration-list} : \\
+		\> \> \emph{constant-or-identifier} \\
+		\>\> \emph{List-declaration-list, constant-or-identifier}
+\end{tabbing}
+\begin{tabbing}
+	\= \emph{const}\=\emph{ant-or-identifier} : \\
+		\> \> \emph{identifier} \\
+		\>\> \emph{constant}
+\end{tabbing}
+
+The \emph{List-declaration-list} is a comma-separated list of identifiers or constants which define the values contained in that list. The associated type of the list is determined by the first element in the \emph{List-declaration-list}. It is invalid to add elements of a different type than the first element to that list. Declaring a List with no \emph{List-declaration-list} initializes an empty list with no associated type. The first element added to that list sets that List's type. 
+
+For example,
+\begin{lstlisting}
+List l_int = [1,2,3,4]
+List l_empty
+List l_str = ["This", "is", "a", "list"]
+\end{lstlisting}
+declares a list containing the first for natural integers, an empty list, and a list of strings.
+
+\subsection{Layout Declarations}
+A Layout is a collection of optionally named members of various types.
+\begin{tabbing}
+	\= \emph{Layout}\=\emph{-intializers} : \\
+		\> \> \texttt{Layout} \emph{identifier} \texttt{= \{} \emph{Layout-declaration-list, Print-specifier\textsubscript{opt}} \texttt{\}}
+\end{tabbing}
+A Layout declaration consists of the keyword \texttt{Layout} followed by an identifier and then an assignment from a  \emph{Layout-declaration-list} surrounded by curly braces. It is also optional to define a \emph{Print-specifier}, which is a string that defines how this Layout should be formatted when printed.
+\begin{tabbing}
+	\= \emph{Layout}\=\emph{-declaration-list} : \\
+		\> \> \emph{Layout-element} \\
+		\>\> \emph{Layout-declaration-list, Layout-element}
+\end{tabbing}
+\begin{tabbing}
+	\= \emph{Layout}\=\emph{-element} : \\
+		\> \> \emph{type-specifier}\texttt{:}\emph{identifier\textsubscript{opt}}
+\end{tabbing}
+\begin{tabbing}
+	\= \emph{Print}\=\emph{-specifier} : \\
+		\> \> \texttt{Print:}\emph{string-identifier-or-constant}
+\end{tabbing}
+The \emph{Layout-declaration-list} is a comma-separated list of \emph{Layout-elements} which defines the members of the Layout being declared. If no identifier is provided for an element, it can be accessed using the numeric Layout element reference as described in \ref{sec:layoutref}. If no \emph{Print-specifier} is defined, the elements are printed in the same order they were defined with any specified delimiter.
+
+An instance of an already created layout is created using similar syntax to the declaration:
+
+\begin{tabbing}
+	\= \emph{Layout}\=\emph{-instance-creation} : \\
+		\> \> \texttt{Layout} \emph{identifier} \emph{identifier} \\
+		\>\> \texttt{Layout} \emph{identifier} \emph{identifier} \texttt{= \{} \emph{Layout-instance-list} \texttt{\}}
+\end{tabbing}
+The first identifier is the identifier of the Layout you are creating an instance of and the second is the identifier of this layout instance. 
+\begin{tabbing}
+	\= \emph{Layout}\=\emph{-instance-list} : \\
+		\> \> \emph{constant-or-identifier} \\
+		\>\> \emph{Layout-instance-list}\texttt{,} \emph{constant-or-identifier}
+\end{tabbing}
+The types of each element in the \emph{Layout-instance-list} must match the types of the members of the Layout type. Each member of the Layout instance declared is assigned the value of the \emph{constant-or-identifier} at that member's position. A mismatch between the member type and the constant or identifier type is considered an error.
+
+Some examples of Layout declaration and creation are
+
+\begin{lstlisting}
+Layout date = { int: mon, int: day, int: year \
+		Print:mon+"-"+day+"-"+year }
+Layout date today = {10, 23, 2014}
+Write(stdout, today)
+# 10-23-2014
+Layout date nextweek = { today.mon, today.day+7, \
+				today.year}
+Layout userinfo = {str: Fname, str: Lname, \		
+			Layout date:bday}
+\end{lstlisting}
+In this example, date is defined as a Layout with three integer fields, for month, day, and year, and has a \emph{Print-specifier} defined. An instance of the date Layout is created with value 10-23-2014 and written to stdout using the Write function (part of the standard library). The date Layout instance \texttt{nextweek} is computed from today's date. The \texttt{userinfo} layout is created with the date Layout nested inside of it. 
+
+\subsection{Table Declarations}
+
+\subsection{Function Declarations}
+\label{sec:funcdec}
 
 \section{Statements}
 % Expression Statements, Flow Control, Iteration Stmt (for, while)
+% Big one is list comprehension syntax
+
 
 \section{Scope}
 
