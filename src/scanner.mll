@@ -5,7 +5,8 @@ let letter = ['a'-'z' 'A'-'Z']
 let identifier = letter (letter | digit | '_')*
 
 rule token = parse
-    [' ' '\t' '\r' '\n'] { token lexbuf } (* Whitespace *)
+    [' ' '\t' '\r' ] { token lexbuf } (* Whitespace *)
+|   [^'\\']'\n'    { NEWLINE }
 | 	"/#"    { comment lexbuf }
 |   '#'     { sl_comment lexbuf }
 | 	'('     { LPAREN }
@@ -45,10 +46,13 @@ rule token = parse
 |   "elif"  { ELIF }
 |   "and"   { AND  }
 |   "or"    { OR }
+|	"for"	{ FOR }
+|	"while" { WHILE }
 |   "continue"  { CONT }
 |   "break"     { BREAK }
 |   "not"   { NOT }
 |   "<-"    { FROM }
+|	"ret"	{ RETURN }
 |   (digit)+ as lxm { INT_LIT(int_of_string lxm) }
 |   ((digit)+'.'|(digit)*'.'(digit)+) as lxm { FLOAT_LIT(lxm) }
 |   '"'(("\""|[^'"'])* as lxm)'"' { STRING_LIT(lxm) }

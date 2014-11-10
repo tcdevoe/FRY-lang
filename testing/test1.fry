@@ -1,0 +1,4 @@
+int i = 0
+float f = 5.5
+str val = "Hello world"
+
