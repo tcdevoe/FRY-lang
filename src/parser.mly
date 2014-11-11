@@ -31,9 +31,11 @@
 %%
 
 program:
-    /* nothing */ { [], [] }
-|   program vdecl { ($2 :: fst $1), snd $1 }
-|   program fdecl { fst $1, ($2 :: snd $1) } 
+    /* nothing */ { { stmts = []; vars = []; funcs = [] } }
+    /* List is built backwards */
+|   program vdecl { { stmts = $1.stmts; vars = $2::$1.vars; funcs = $1.funcs } }
+|   program fdecl { { stmts = $1.stmts; vars = $1.vars; funcs = $2::$1.funcs } } 
+|	program stmt  { { stmts = $2::$1.stmts; vars = $1.vars; funcs = $1.funcs } }
 
 vdecl:
     type_spec ID NEWLINE { { data_type = $1; vname = $2 } }

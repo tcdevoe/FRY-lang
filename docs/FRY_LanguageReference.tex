@@ -141,7 +141,7 @@ Write(stdout, i)
 # 5
 \end{lstlisting}
 \subsection{Arithmetic Conversions}
-Performing any sort of arithemetic operation on an Integer and floating point number has a floating point result. For example:
+For any binary operator with a floating point and an integer operator, the integer will be promoited to a float before the operation is performed.
 \begin{lstlisting}
 float f = 5.25
 int i = 2
@@ -195,12 +195,12 @@ Operators in a postfix expression are grouped from left to right.
 
 \subsubsection{List Element Reference}
 A list identifier followed by square brackets with an integer-valued expression inside denotes referencing the element at that index in the List. For instance \lstinline!MyLst[5]! would reference the $6^\mathrm{th}$ element of the List, \emph{MyLst}. Similarly, \lstinline!MyLst[n]! would reference the $n-1^\mathrm{th}$ element of MyLst. The type of this element is the same as the type of elements the List you are accessing contains. \\
-Sublists can be returned by \emph{sliceing} the list. By specifying the optional colon (':') and indices before and/or after, the list is sliced and a sublist of the original list is returned. If there is an integer before the semi-colon and none after, then a sublist is returned spanning from the integer to the end of the list. If there is an integer after the colon and none before, the a sublist is returned spanning from the beginning of the list to the integer index. If there is an integer before and after the colon, then a sublist is returned spanning from the first integer index to the second integer index.
+Sublists can be returned by \emph{slicing} the list. By specifying the optional colon (':') and indices before and/or after, the list is sliced and a sublist of the original list is returned. If there is an integer before the semi-colon and none after, then a sublist is returned spanning from the integer to the end of the list. If there is an integer after the colon and none before, the a sublist is returned spanning from the beginning of the list to the integer index. If there is an integer before and after the colon, then a sublist is returned spanning from the first integer index to the second integer index.
 
 \subsubsection{Layout Element Reference}
 \label{sec:layoutref}
 A layout identifier followed by a dot and an expression in braces ${ }$ references an element of a layout. The expression in the braces must either be \emph{(i)} the name of one of the member elements in the Layout you are accessing, such as \lstinline!MyLyt.{elem_name}! or \emph{(ii)} a integer reference to the $n^\mathrm{th}$ element of the Layout, i.e. \lstinline!MyLyt.{2}! would access the $1^\mathrm{st}$ member element. The type of the element returned will be the type that element was defined to be when the Layout was defined. If the member element you are accessing is itself a Layout, then the numeric and identifier references will both return a element of that Layout type. 
-Sublayouts can be returned by \emph{sliceing} the layout. Layout slicing syntax is mostly the same as the List slicing, except you can also specify element names as the indices on either side of the colon. This returns an instance of unamed layout type with unamed elements.
+Sublayouts can be returned by \emph{slicing} the layout. Layout slicing syntax is mostly the same as the List slicing, except you can also specify element names as the indices on either side of the colon. This returns an instance of unamed layout type with unamed elements.
 
 \subsubsection{Function Calls}
 A function call consists of a function identifer, followed by parentheses with a possibly empty argument list contained. A copy is made of each object passed to the function, so the value of the original object will remained unchanged. Function declarations are discussed in \ref{sec:funcdec}.

@@ -41,7 +41,7 @@ type func_decl = {
     body : stmt list;
 }
 
-type program = var_decl list * func_decl list
+type program = { stmts: stmt list; vars: var_decl list; funcs: func_decl list }
 
 
 (* Low-level AST printing for debugging *)
@@ -80,3 +80,26 @@ let rec stmt_s = function
 | For(e, s) -> "For (" ^ expr_s e ^ ") (" ^ stmt_s s ^ ") "
 | While(e, s) -> "While (" ^ expr_s e ^ ") (" ^ stmt_s s ^ ") "
 | SetBuild(e1, e2, e3) -> "SetBuild (" ^ expr_s e1 ^ ") (" ^ expr_s e2 ^ ") (" ^ expr_s e3 ^ ") "
+
+let data_type_s = function
+  String -> "String"
+| Float -> "Float" 
+| Bool -> "Bool" 
+| Int -> "Int" 
+| List -> "List" 
+| Layout -> "Layout" 
+| Table -> "Table"
+
+let var_decl_s v = data_type_s v.data_type ^ " " ^ v.vname
+
+let func_decl_s f = 
+" { fname = \"" ^ f.fname ^ "\"\n ret_type = \"" ^ data_type_s f.ret_type ^ "\"\n formals = [" ^ 
+String.concat ", " (List.map var_decl_s f.formals) ^ "]\n locals = [" ^ 
+String.concat ", " (List.map var_decl_s f.locals) ^ "]\n body = [" ^
+String.concat "\n" (List.map stmt_s f.body) ^
+"]}\n"
+
+let program_s prog = "([" ^  String.concat ", " (List.map stmt_s prog.stmts) ^ "],\n" ^ 
+					  "[" ^ String.concat ", " (List.map var_decl_s prog.vars) ^ "],\n" ^
+					  "[" ^ String.concat ", " (List.map func_decl_s prog.funcs) ^"])"
+
