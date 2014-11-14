@@ -6,7 +6,7 @@
 %token GT GEQ INT STRING FLOAT BOOL
 %token LAYOUT LIST TABLE IN NOT FROM
 %token IF ELSE ELIF AND OR CONT BREAK
-%token INC DEC PERIOD COLON NEWLINE
+%token INC DEC PERIOD COLON
 %token RETURN FOR WHILE
 %token <int> INT_LIT
 %token <string> FLOAT_LIT BOOL_LIT STRING_LIT ID
@@ -30,6 +30,94 @@
 
 %%
 
+/********************
+	EXPRESSIONS
+*********************/
+
+literal:
+    STRING_LIT      { StringLit($1) } 
+|   FLOAT_LIT       { FloatLit($1) }
+|   INT_LIT         { IntLit($1) }
+|   BOOL_LIT        { BoolLit($1) }
+
+primary_expr:
+|   ID              { Id($1) }
+|	literal 		{ $1 }
+|	LPAREN expr RPAREN { $2 }
+
+postfix_expr:
+	primary_expr { $1 }
+|   postfix_expr INC        { Postop($1, Inc) }
+|   postfix_expr DEC        { Postop($1, Dec) }
+|   postfix_expr LBRACK expr slice_opt RBRACK { Ref($1, ListRef, $3, $4) }
+|   postfix_expr PERIOD LBRACE expr slice_opt RBRACE { Ref($1, LayRef, $4, $5) }
+
+prefix_expr:
+    postfix_expr { $1 }
+|   NOT prefix_expr      { Preop(Not, $2) }
+
+multi_expr:
+	prefix_expr		{ $1 }
+|	multi_expr TIMES multi_expr { Binop($1, Mult,$3) }
+|   multi_expr DIVIDE multi_expr { Binop($1, Div, $3) } 
+
+add_expr:
+	multi_expr { $1 }
+|   add_expr PLUS add_expr  { Binop($1, Add, $3) }
+|   add_expr MINUS add_expr { Binop($1, Sub, $3) }
+
+cont_expr:
+    add_expr IN cont_expr    { Binop($1, In, $3) }
+|   add_expr NOT IN cont_expr { Binop($1, Notin, $4) }
+
+relational_expr:
+	add_expr		{ $1 }
+|   relational_expr LT relational_expr    { Binop($1, Less, $3) }
+|   relational_expr LEQ relational_expr   { Binop($1, Leq, $3) }
+|   relational_expr GT relational_expr    { Binop($1, Greater, $3) }
+|   relational_expr GEQ relational_expr   { Binop($1, Geq, $3) }
+
+equality_expr:
+	relational_expr { $1 }
+|   equality_expr EQ equality_expr    { Binop($1, Equal, $3) } 
+|   equality_expr NEQ equality_expr   { Binop($1, Neq, $3) }
+
+logical_AND_expr:
+	equality_expr { $1 }
+|	logical_AND_expr AND logical_AND_expr   { Binop($1, And, $3) }
+
+logical_OR_expr:
+	logical_AND_expr { $1 }
+|   expr OR expr    { Binop($1, Or, $3) }
+
+assign_expr:
+	logical_OR_expr { $1 }
+|   ID ASSIGN expr { Assign($1, $3) }
+
+expr:
+    ID LPAREN actuals_opt RPAREN { Call($1, $3) }
+|	assign_expr		{ $1 }
+
+/***************************
+		DECLARATIONS
+***************************/
+
+type_spec:
+	STRING 			{ String }
+|	INT 			{ Int }
+|	FLOAT 			{ Float }
+| 	BOOL 			{ Bool }
+|	LIST 			{ List }
+|	LAYOUT			{ Layout }
+| 	TABLE 			{ Table }
+
+declarator:
+	ID 		{ Assign($1, Noexpr) }
+|	ID ASSIGN expr  { Assign($1, $3) }
+
+vdecl:
+    type_spec declarator SEMI { {data_type=$1; decl=$2} }
+
 program:
     /* nothing */ { { stmts = []; vars = []; funcs = [] } }
     /* List is built backwards */
@@ -37,8 +125,7 @@ program:
 |   program fdecl { { stmts = $1.stmts; vars = $1.vars; funcs = $2::$1.funcs } } 
 |	program stmt  { { stmts = $2::$1.stmts; vars = $1.vars; funcs = $1.funcs } }
 
-vdecl:
-    type_spec ID NEWLINE { { data_type = $1; vname = $2 } }
+
 
 vdecl_list:
 	/* nothing */ { [] }
@@ -56,13 +143,13 @@ fdecl:
 
 param_list:
 	/* nothing */ { [] }
-|	type_spec ID { [{data_type = $1; vname = $2; }] }
-|	param_list COMMA type_spec ID { {data_type = $3; vname = $4; }::$1}
+|	type_spec ID { [{data_type = $1; decl = Id($2); }] }
+|	param_list COMMA type_spec ID { {data_type = $3; decl = Id($4); }::$1}
 
 /* TODO: Add in jump-statements (break/continue) */
 stmt:
-	expr NEWLINE { Expr($1) }
-|	RETURN expr NEWLINE { Return($2) }
+	expr SEMI { Expr($1) }
+|	RETURN expr SEMI { Return($2) }
 |	LBRACE stmt_list RBRACE	{ Block(List.rev $2) }
 |	IF LPAREN expr RPAREN stmt elif_list NOELSE { If(($3,$5)::$6, Block([])) }
 |	IF LPAREN expr RPAREN stmt elif_list ELSE stmt { If(($3,$5)::$6, $8) }
@@ -79,36 +166,6 @@ elif_list:
 |	ELIF LPAREN expr RPAREN stmt { [$3, $5] } /* make sure list is being created correctly */
 |	elif_list ELIF LPAREN expr RPAREN stmt { ($4, $6)::$1 }
 
-expr:
-    STRING_LIT      { StringLit($1) } 
-|   FLOAT_LIT       { FloatLit($1) }
-|   INT_LIT         { IntLit($1) }
-|   BOOL_LIT        { BoolLit($1) }
-|   ID              { Id($1) }
-|   expr PLUS expr  { Binop($1, Add, $3) }
-|   expr MINUS expr { Binop($1, Sub, $3) }
-|   expr TIMES expr { Binop($1, Mult,$3) }
-|   expr DIVIDE expr { Binop($1,Div, $3) } 
-|   expr EQ expr    { Binop($1, Equal, $3) } 
-|   expr NEQ expr   { Binop($1, Neq, $3) }
-|   expr LT expr    { Binop($1, Less, $3) }
-|   expr LEQ expr   { Binop($1, Leq, $3) }
-|   expr GT expr    { Binop($1, Greater, $3) }
-|   expr GEQ expr   { Binop($1, Geq, $3) }
-|   expr IN expr    { Binop($1, In, $3) }
-|   expr NOT IN expr { Binop($1, Notin, $4) }
-|   expr AND expr   { Binop($1, And, $3) }
-|   expr OR expr    { Binop($1, Or, $3) }
-|   expr FROM expr  { Binop($1, From, $3) }
-|   expr INC        { Postop($1, Inc) }
-|   expr DEC        { Postop($1, Dec) }
-|   NOT expr        { Preop(Not, $2) }
-|   expr LBRACK expr slice_opt RBRACK { Ref($1, ListRef, $3, $4) }
-|   expr PERIOD LBRACE expr slice_opt RBRACE { Ref($1, LayRef, $4, $5) }
-|   ID ASSIGN expr { Assign($1, $3) }
-|   ID LPAREN actuals_opt RPAREN { Call($1, $3) }
-|   LPAREN expr RPAREN      { $2 }
-
 expr_opt:
     /* nothing */ { Noexpr }
 |   expr          { $1 }
@@ -124,12 +181,3 @@ actuals_opt:
 actuals_list:
     expr                        { [$1] }
 |   actuals_list COMMA expr     { $3 :: $1 }
-
-type_spec:
-	STRING 			{ String }
-|	INT 			{ Int }
-|	FLOAT 			{ Float }
-| 	BOOL 			{ Bool }
-|	LIST 			{ List }
-|	LAYOUT			{ Layout }
-| 	TABLE 			{ Table }

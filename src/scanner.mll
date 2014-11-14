@@ -5,8 +5,7 @@ let letter = ['a'-'z' 'A'-'Z']
 let identifier = letter (letter | digit | '_')*
 
 rule token = parse
-    [' ' '\t' '\r' ] { token lexbuf } (* Whitespace *)
-|   [^'\\']'\n'    { NEWLINE }
+    [' ' '\t' '\r' '\n' ] { token lexbuf } (* Whitespace *)
 | 	"/#"    { comment lexbuf }
 |   '#'     { sl_comment lexbuf }
 | 	'('     { LPAREN }
@@ -58,6 +57,7 @@ rule token = parse
 |   '"'(("\""|[^'"'])* as lxm)'"' { STRING_LIT(lxm) }
 |   "true" | "false" as lxm { BOOL_LIT(lxm) }
 |   identifier as lxm { ID(lxm) }
+|	eof { EOF }
 |   _ as char { raise (Failure("Illegal Character found :" ^ Char.escaped char)) }
 
 

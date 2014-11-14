@@ -30,7 +30,7 @@ type stmt =
 
 type var_decl = {
     data_type : dataType;
-    vname : string;
+    decl : expr;
 }
 
 type func_decl = {
@@ -90,7 +90,7 @@ let data_type_s = function
 | Layout -> "Layout" 
 | Table -> "Table"
 
-let var_decl_s v = data_type_s v.data_type ^ " " ^ v.vname
+let var_decl_s v = data_type_s v.data_type ^ " " ^ expr_s v.decl
 
 let func_decl_s f = 
 " { fname = \"" ^ f.fname ^ "\"\n ret_type = \"" ^ data_type_s f.ret_type ^ "\"\n formals = [" ^ 
