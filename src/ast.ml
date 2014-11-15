@@ -1,6 +1,6 @@
 (* Ref is List/Layout element reference *)
 type op = Add | Sub | Mult | Div | Equal | Neq | Less | Leq | Greater | Geq | In | Notin | And | Or | From
-type dataType = String | Float | Bool | Int | List | Layout | Table
+type dataType  = String | Float | Bool | Int | Layout | Table
 type post = Inc | Dec 
 type pre = Not
 type ref = ListRef | LayRef
@@ -10,6 +10,8 @@ type expr =
 |   FloatLit of string
 |   IntLit of int
 |   BoolLit of string
+|   ListLit of expr list
+|   ListGen of expr * expr 	(* List generator which keeps the min and max of the generated list *)
 |   Id of string
 |   Binop of expr * op * expr
 |   Postop of expr * post
@@ -17,7 +19,12 @@ type expr =
 |   Ref of expr * ref * expr * expr (* ID of object * reference type * index1 * index2 *)
 |   Assign of string * expr
 |   Call of string * expr list
+|   SetBuild of expr * string * expr * expr (* [ return-layout | ID <- element-of; expression ] *)
 |   Noexpr
+
+type var_decl = 
+	BasicDecl of dataType * expr
+|   ListDecl of dataType * expr
 
 type stmt =
     Block of stmt list
@@ -26,22 +33,18 @@ type stmt =
 |   If of (expr * stmt) list * stmt
 |   For of expr * stmt (* needs to be a X in Y binop expr *)
 |   While of expr * stmt
-|   SetBuild of expr * expr * expr (* [ return-layout | element-of; expression ] *)
+| 	VarDecl of var_decl 
 
-type var_decl = {
-    data_type : dataType;
-    decl : expr;
-}
 
 type func_decl = {
     fname : string;
     ret_type : dataType;
     formals : var_decl list;
-    locals : var_decl list;
     body : stmt list;
 }
 
-type program = { stmts: stmt list; vars: var_decl list; funcs: func_decl list }
+(* stmts includes var decls and statements *)
+type program = { stmts: stmt list; funcs: func_decl list }
 
 
 (* Low-level AST printing for debugging *)
@@ -51,6 +54,8 @@ let rec expr_s = function
 | FloatLit(l) -> "FloatLit " ^ l
 | IntLit(l) ->	"IntLit " ^ string_of_int l
 | BoolLit(l) ->  "BoolLit " ^ l
+| ListGen(e1, e2) -> "ListGen (" ^ expr_s e1 ^ ", "^ expr_s e2 ^ ")"
+| ListLit(l) ->		"ListLit ("  ^ String.concat ", " (List.map (fun e -> "(" ^ expr_s e ^ ")") l) ^ ")"
 | Id(s) -> "ID " ^ s
 | Binop(e1, o, e2) -> "Binop (" ^ expr_s e1 ^ ") " ^
 	(match o with Add -> "Add" | Sub -> "Sub" | Mult -> "Mult" |
@@ -67,8 +72,21 @@ let rec expr_s = function
 | Assign(v, e) -> "Assign " ^ v ^ " (" ^ expr_s e ^ ") "
 | Call(f, es) -> "Call " ^ f ^ " [" ^
 		String.concat ", " (List.map (fun e -> "(" ^ expr_s e ^ ")") es) ^ "]"
+| SetBuild(e1, id, e2, e3) -> "SetBuild (" ^ expr_s e1 ^ ") " ^ id ^ " from (" ^ expr_s e2 ^ ") (" ^ expr_s e3 ^ ") "
 | Noexpr -> "Noexpr"
 
+let data_type_s = function
+  String -> "String"
+| Float -> "Float" 
+| Bool -> "Bool" 
+| Int -> "Int"  
+| Layout -> "Layout" 
+| Table -> "Table"
+
+
+let var_decl_s = function 
+	BasicDecl(d,e) -> "BasicDecl (" ^ data_type_s d ^ " " ^ expr_s e ^ ")"
+|   ListDecl(d,e) -> "ListDecl (" ^ data_type_s d ^ " " ^ expr_s e ^ ")"
 
 (* TODO: FINISH PRINT STMTS *)
 let rec stmt_s = function
@@ -79,27 +97,16 @@ let rec stmt_s = function
 | If(elif_l, s) -> "TODO"
 | For(e, s) -> "For (" ^ expr_s e ^ ") (" ^ stmt_s s ^ ") "
 | While(e, s) -> "While (" ^ expr_s e ^ ") (" ^ stmt_s s ^ ") "
-| SetBuild(e1, e2, e3) -> "SetBuild (" ^ expr_s e1 ^ ") (" ^ expr_s e2 ^ ") (" ^ expr_s e3 ^ ") "
+| VarDecl(v) -> var_decl_s v
 
-let data_type_s = function
-  String -> "String"
-| Float -> "Float" 
-| Bool -> "Bool" 
-| Int -> "Int" 
-| List -> "List" 
-| Layout -> "Layout" 
-| Table -> "Table"
-
-let var_decl_s v = data_type_s v.data_type ^ " " ^ expr_s v.decl
 
 let func_decl_s f = 
 " { fname = \"" ^ f.fname ^ "\"\n ret_type = \"" ^ data_type_s f.ret_type ^ "\"\n formals = [" ^ 
-String.concat ", " (List.map var_decl_s f.formals) ^ "]\n locals = [" ^ 
-String.concat ", " (List.map var_decl_s f.locals) ^ "]\n body = [" ^
+String.concat ", " (List.map var_decl_s f.formals) ^ "]\n body = [" ^
 String.concat "\n" (List.map stmt_s f.body) ^
 "]}\n"
 
-let program_s prog = "([" ^  String.concat ", " (List.map stmt_s prog.stmts) ^ "],\n" ^ 
-					  "[" ^ String.concat ", " (List.map var_decl_s prog.vars) ^ "],\n" ^
+(* stmt list is built backwards, need to reverse *)
+let program_s prog = "([" ^  String.concat ", " (List.rev (List.map stmt_s prog.stmts)) ^ "],\n" ^ 
 					  "[" ^ String.concat ", " (List.map func_decl_s prog.funcs) ^"])"
 

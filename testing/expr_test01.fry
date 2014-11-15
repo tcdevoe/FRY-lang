@@ -1,0 +1,13 @@
+/#    
+
+expr_test01.fry
+
+This tests addition/subtraction operators 
+
+#/
+
+
+int id;
+6;
+str var;
+

@@ -1,0 +1,16 @@
+/#
+
+cond_test01.fry
+
+Test if conditional 
+
+#/
+
+bool x = true;
+int y;
+
+if (x) {
+    y = 6;
+} else {
+    y = "Test";
+}

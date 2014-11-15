@@ -1,0 +1,12 @@
+/#
+
+list_test01.fry
+
+Tests list creation
+
+#/
+
+int List my_int = [1, 2, 3 ];
+str List str_list = [ "TEST1", "TEST2", "HELLOWORLD" ];
+bool List bool_list = [ true, false, true, true];
+float List flt_list = [ 4.34, 5.711, 42.745]; 

@@ -12,8 +12,8 @@ rule token = parse
 | 	')'     { RPAREN }
 | 	'{'     { LBRACE }
 | 	'}'     { RBRACE }
-|	']'		{ LBRACK }
-|	'['		{ RBRACK }
+|	']'		{ RBRACK }
+|	'['		{ LBRACK }
 |	'|'		{ BAR }
 | 	';'     { SEMI }
 |   ':'     { COLON }
@@ -54,7 +54,7 @@ rule token = parse
 |	"ret"	{ RETURN }
 |   (digit)+ as lxm { INT_LIT(int_of_string lxm) }
 |   ((digit)+'.'|(digit)*'.'(digit)+) as lxm { FLOAT_LIT(lxm) }
-|   '"'(("\""|[^'"'])* as lxm)'"' { STRING_LIT(lxm) }
+|   '"' (( '\\' _   | [^'"'] )* as lxm)'"' { STRING_LIT(lxm) }
 |   "true" | "false" as lxm { BOOL_LIT(lxm) }
 |   identifier as lxm { ID(lxm) }
 |	eof { EOF }

@@ -1,0 +1,9 @@
+/#
+
+tbl_test01.fry
+
+Tests set-builder stmt
+
+#/
+
+Table x = [ y | y <- z; y.{a} > 2];

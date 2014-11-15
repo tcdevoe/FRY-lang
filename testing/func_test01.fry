@@ -1,0 +1,12 @@
+/#
+
+    func_test01.fry
+
+    This tests creating a basic function
+
+#/
+
+int test(){
+    str x = "test";
+    ret x;
+}

@@ -45,12 +45,17 @@ primary_expr:
 |	literal 		{ $1 }
 |	LPAREN expr RPAREN { $2 }
 
+set_build_expr:
+	primary_expr	{ $1 }
+|	LBRACK expr BAR ID FROM set_build_expr SEMI expr RBRACK { SetBuild($2,$4,$6,$8) }
+
 postfix_expr:
-	primary_expr { $1 }
+	set_build_expr { $1 }
 |   postfix_expr INC        { Postop($1, Inc) }
 |   postfix_expr DEC        { Postop($1, Dec) }
 |   postfix_expr LBRACK expr slice_opt RBRACK { Ref($1, ListRef, $3, $4) }
 |   postfix_expr PERIOD LBRACE expr slice_opt RBRACE { Ref($1, LayRef, $4, $5) }
+
 
 prefix_expr:
     postfix_expr { $1 }
@@ -94,9 +99,23 @@ assign_expr:
 	logical_OR_expr { $1 }
 |   ID ASSIGN expr { Assign($1, $3) }
 
+func_call:
+	assign_expr { $1 }
+| 	ID LPAREN actuals_opt RPAREN { Call($1, $3) }
+
+list_initializer:
+	func_call  { $1 }
+|	LBRACK list_initializer_list RBRACK { ListLit($2) }
+|	RBRACE func_call PERIOD PERIOD func_call LBRACK { ListGen($2, $5) }
+
+list_initializer_list:
+	func_call 	{ [$1] }
+|	list_initializer_list COMMA func_call { $3::$1 } 
+
 expr:
-    ID LPAREN actuals_opt RPAREN { Call($1, $3) }
-|	assign_expr		{ $1 }
+	list_initializer	{ $1 }
+
+
 
 /***************************
 		DECLARATIONS
@@ -107,44 +126,36 @@ type_spec:
 |	INT 			{ Int }
 |	FLOAT 			{ Float }
 | 	BOOL 			{ Bool }
-|	LIST 			{ List }
 |	LAYOUT			{ Layout }
 | 	TABLE 			{ Table }
 
 declarator:
-	ID 		{ Assign($1, Noexpr) }
+	ID 		{ Id($1) }
 |	ID ASSIGN expr  { Assign($1, $3) }
 
 vdecl:
-    type_spec declarator SEMI { {data_type=$1; decl=$2} }
+    type_spec declarator SEMI { BasicDecl($1, $2) }
+|	type_spec LIST declarator SEMI { ListDecl($1, $3) }
 
 program:
-    /* nothing */ { { stmts = []; vars = []; funcs = [] } }
+    /* nothing */ { { stmts = []; funcs = [] } }
     /* List is built backwards */
-|   program vdecl { { stmts = $1.stmts; vars = $2::$1.vars; funcs = $1.funcs } }
-|   program fdecl { { stmts = $1.stmts; vars = $1.vars; funcs = $2::$1.funcs } } 
-|	program stmt  { { stmts = $2::$1.stmts; vars = $1.vars; funcs = $1.funcs } }
-
-
-
-vdecl_list:
-	/* nothing */ { [] }
-|	vdecl_list vdecl { $2::$1 }
+|   program fdecl { { stmts = $1.stmts; funcs = $2::$1.funcs } } 
+|	program stmt  { { stmts = $2::$1.stmts; funcs = $1.funcs } }
 
 fdecl:
-    type_spec ID LPAREN param_list RPAREN LBRACE vdecl_list stmt_list RBRACE
+    type_spec ID LPAREN param_list RPAREN LBRACE stmt_list RBRACE
     	{{ 
     		fname = $2;
     		ret_type = $1;
     		formals = $4;
-    		locals = List.rev $7;
-    		body = List.rev $8;
+    		body = List.rev $7;
     	}}
 
 param_list:
 	/* nothing */ { [] }
-|	type_spec ID { [{data_type = $1; decl = Id($2); }] }
-|	param_list COMMA type_spec ID { {data_type = $3; decl = Id($4); }::$1}
+|	param_list COMMA type_spec ID { BasicDecl($3, Id($4))::$1}
+|	param_list COMMA type_spec LIST ID { ListDecl($3, Id($5))::$1 }
 
 /* TODO: Add in jump-statements (break/continue) */
 stmt:
@@ -155,7 +166,7 @@ stmt:
 |	IF LPAREN expr RPAREN stmt elif_list ELSE stmt { If(($3,$5)::$6, $8) }
 |	FOR expr stmt { For($2, $3) }
 |	WHILE expr stmt { While($2, $3) }
-|	LBRACK expr BAR expr SEMI expr RBRACK { SetBuild($2,$4,$6) }
+|	vdecl 		  { VarDecl($1) }
 
 stmt_list:
 	/* nothing */ { [] }
