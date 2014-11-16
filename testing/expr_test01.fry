@@ -8,6 +8,6 @@ This tests addition/subtraction operators
 
 
 int id;
-6;
-str var;
+id = 6;
+str var = "test";
 

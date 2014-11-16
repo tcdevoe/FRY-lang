@@ -29,14 +29,18 @@ and j_expr = function
 (* |   ListLit of expr list
 |   ListGen of expr * expr 	(* List generator which keeps the min and max of the generated list *) *)
 |   Id(x) -> x
-(* |   Binop of expr * op * expr
-|   Postop of expr * post
-|   Preop of pre * expr
-|   Ref of expr * ref * expr * expr (* ID of object * reference type * index1 * index2 *)
-|   Assign of string * expr
-|   Call of string * expr list
-|   SetBuild of expr * string * expr * expr (* [ return-layout | ID <- element-of; expression ] *) *)
-|   Noexpr -> ""
+|   Binop(e1, o, e2) -> writeBinOp e1 o e2 
+| 	Postop(e1, o) -> j_expr e1 ^ 
+	(match o with Inc -> "++" | Dec -> "--" )
+| 	Preop(o,e1) -> "!" ^ j_expr e1
+(*| 	 Ref(e1, r, e2, e3) -> "Reference (" ^ expr_s e1 ^ ") " ^
+	(match r with ListRef -> "ListRef" | LayRef -> "LayRef") ^ 
+	" (" ^ expr_s e2 ^ ") " ^ " (" ^ expr_s e3 ^ ") " *)
+| 	Assign(v, e) ->  v ^ " = " ^ j_expr e
+|   Call(f, es) -> f ^ 
+		String.concat ", " (List.map (fun e -> "(" ^ expr_s e ^ ")") es)
+(* | SetBuild(e1, id, e2, e3) -> "SetBuild (" ^ expr_s e1 ^ ") " ^ id ^ " from (" ^ expr_s e2 ^ ") (" ^ expr_s e3 ^ ") " *)
+| Noexpr -> ""
 
 and writeForLoop e s = 
 	"//TODO WRITE FORLOOP"
@@ -46,12 +50,20 @@ and writeIf (elif_l:(expr*stmt) list) (else_stmt:stmt) =
 
 and writeWhileLoop (e:expr) (s:stmt) = 
 	"while(" ^ j_expr e ^ ") { \n" ^
-		j_stmt s^
+		j_stmt s ^
 	";\n}"
 
 and writeVarDecl = function
 	BasicDecl(d, e) -> j_data_type d ^ " " ^ j_expr e 
 |   ListDecl(d, e) -> j_data_type d ^ "[] " ^ j_expr e 
+
+and writeBinOp e1 o e2 = j_expr e1 ^ 
+		(match o with Add -> "+" | Sub -> "-" | Mult -> "*" |
+				  Div -> "/" | Equal -> "==" | Neq -> "!=" | 
+				  Less -> "<" | Leq -> "<=" | Greater -> ">" |
+				  Geq -> ">=" (* |  In -> "In" | Notin -> "Notin" | From -> "From" *)
+				  | And -> "&&" | Or -> "||" ) ^ j_expr e2
+
 
 and j_stmt = function
 	Block(ss) -> "{" ^ String.concat ";\n" ( List.rev (List.map j_stmt ss)) ^ ";\n}"	
