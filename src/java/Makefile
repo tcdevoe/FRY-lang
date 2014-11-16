@@ -5,12 +5,12 @@ JFLAGS = -g
 	javac $(JFLAGS) $*.java
 
 CLASSES = \
-	IOUtils.java
+	fry/IOUtils.java
 
 default: classes
 
 classes: $(CLASSES:.java=.class)
 
 clean:
-	rm *.class
+	rm fry/*.class
 

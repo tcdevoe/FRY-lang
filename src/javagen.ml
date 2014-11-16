@@ -2,10 +2,12 @@ open Ast
 
 
 let rec j_prgm (prog) = 
+	"import fry.IOUtils;\n" ^
 	"public class test{\n" ^
 	"public static void main(String[] args){\n" ^
 		String.concat ";\n" ( List.rev (List.map j_stmt prog.stmts)) ^
 		";\n}\n}"
+
 and j_data_type = function
 	String 	-> "String"
 |   Int		-> "int"
@@ -18,8 +20,6 @@ and j_data_type = function
 (************************************
 	STATEMENT HELPER FUNCTIONS
 *************************************)
-
-
 
 and j_expr = function
 	StringLit(s) -> "\"" ^ s ^ "\""
@@ -37,10 +37,20 @@ and j_expr = function
 	(match r with ListRef -> "ListRef" | LayRef -> "LayRef") ^ 
 	" (" ^ expr_s e2 ^ ") " ^ " (" ^ expr_s e3 ^ ") " *)
 | 	Assign(v, e) ->  v ^ " = " ^ j_expr e
-|   Call(f, es) -> f ^ 
-		String.concat ", " (List.map (fun e -> "(" ^ expr_s e ^ ")") es)
+|   Call(f, es) -> (match f with 
+	| "Write" -> "IOUtils.Write" ^ "(" ^
+		String.concat ", " (List.map elemForIO es) ^ ")"		
+	| "Read" -> "IOUtils.Read" ^ "(" ^
+		String.concat ", " (List.map elemForIO es) ^ ")"
+	| _ -> f ^ "(" ^
+		String.concat ", " (List.map (fun e -> j_expr e ) es) ^ ")")
 (* | SetBuild(e1, id, e2, e3) -> "SetBuild (" ^ expr_s e1 ^ ") " ^ id ^ " from (" ^ expr_s e2 ^ ") (" ^ expr_s e3 ^ ") " *)
 | Noexpr -> ""
+
+and elemForIO e = match e with Id("stdout") -> "\"stdout\""
+							| 	Id("stderr") -> "\"stderr\""
+							|  	Id("stdin") ->	"\"stdin\"" 
+							| 	_ -> j_expr e
 
 and writeForLoop e s = 
 	"//TODO WRITE FORLOOP"
