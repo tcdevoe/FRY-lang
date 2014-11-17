@@ -88,17 +88,24 @@ let var_decl_s = function
 	BasicDecl(d,e) -> "BasicDecl (" ^ data_type_s d ^ " " ^ expr_s e ^ ")"
 |   ListDecl(d,e) -> "ListDecl (" ^ data_type_s d ^ " " ^ expr_s e ^ ")"
 
+
 (* TODO: FINISH PRINT STMTS *)
 let rec stmt_s = function
   Block(ss) -> "Block [" ^ String.concat ",\n"
   								(List.map (fun s -> "(" ^ stmt_s s ^ ")") ss) ^ "]"
 | Expr(e) -> "Expr (" ^ expr_s e ^ ") "
 | Return(e) -> "Return (" ^ expr_s e ^ ")"
-| If(elif_l, s) -> "TODO"
+| If(elif_l, s) ->	(match elif_l with
+					[] -> ""
+				|   [x] -> "If ( " ^ expr_s (fst x) ^ ", " ^ stmt_s (snd x) ^ ")\n" 
+				|   h::t -> "If ( " ^ expr_s (fst h) ^ ", " ^ stmt_s (snd h) ^ ")\n" ^
+					String.concat "\n" (List.map (fun tl -> 
+					"Elif (" ^ expr_s (fst tl) ^ ", " ^ stmt_s (snd tl) ^ ")" ) t) ) ^
+				(* Don't really care about empty else for pretty printing, see javagen for implementation *)
+				"\n Else (" ^ stmt_s s ^ ")"				
 | For(e, s) -> "For (" ^ expr_s e ^ ") (" ^ stmt_s s ^ ") "
 | While(e, s) -> "While (" ^ expr_s e ^ ") (" ^ stmt_s s ^ ") "
 | VarDecl(v) -> var_decl_s v
-
 
 let func_decl_s f = 
 " { fname = \"" ^ f.fname ^ "\"\n ret_type = \"" ^ data_type_s f.ret_type ^ "\"\n formals = [" ^ 
@@ -107,6 +114,6 @@ String.concat "\n" (List.map stmt_s f.body) ^
 "]}\n"
 
 (* stmt list is built backwards, need to reverse *)
-let program_s prog = "([" ^  String.concat ", " (List.rev (List.map stmt_s prog.stmts)) ^ "],\n" ^ 
-					  "[" ^ String.concat ", " (List.map func_decl_s prog.funcs) ^"])"
+let program_s prog = "([" ^  String.concat ",\n" (List.rev (List.map stmt_s prog.stmts)) ^ "],\n" ^ 
+					  "[" ^ String.concat ",\n" (List.map func_decl_s prog.funcs) ^"])"
 

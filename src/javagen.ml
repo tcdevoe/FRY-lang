@@ -5,8 +5,8 @@ let rec j_prgm (prog) =
 	"import fry.IOUtils;\n" ^
 	"public class test{\n" ^
 	"public static void main(String[] args){\n" ^
-		String.concat ";\n" ( List.rev (List.map j_stmt prog.stmts)) ^
-		";\n}\n}"
+		String.concat "\n" ( List.rev (List.map j_stmt prog.stmts)) ^
+		"\n}\n}"
 
 and j_data_type = function
 	String 	-> "String"
@@ -55,8 +55,15 @@ and elemForIO e = match e with Id("stdout") -> "\"stdout\""
 and writeForLoop e s = 
 	"//TODO WRITE FORLOOP"
 
-and writeIf (elif_l:(expr*stmt) list) (else_stmt:stmt) =
-	"//TODO WRITE IF ELIF ELSE"
+and writeIf (elif_l:(expr*stmt) list) (else_stmt:stmt) = (match elif_l with
+					[] -> ""
+				|   [x] -> "if ( " ^ j_expr (fst x) ^ ")\n" ^ j_stmt (snd x) ^ "\n" 
+				|   h::t -> "if ( " ^ j_expr (fst h) ^ ")\n" ^ j_stmt (snd h) ^ "\n" ^
+					String.concat "\n" (List.map (fun tl -> 
+					"else if (" ^ j_expr (fst tl) ^ " )\n" ^ j_stmt (snd tl) ^ "\n" ) t) ) ^
+				(match else_stmt with
+					Block([]) -> ""
+				| 	_ -> "else\n" ^ j_stmt else_stmt ^ "\n")	
 
 and writeWhileLoop (e:expr) (s:stmt) = 
 	"while(" ^ j_expr e ^ ") { \n" ^
@@ -64,8 +71,8 @@ and writeWhileLoop (e:expr) (s:stmt) =
 	";\n}"
 
 and writeVarDecl = function
-	BasicDecl(d, e) -> j_data_type d ^ " " ^ j_expr e 
-|   ListDecl(d, e) -> j_data_type d ^ "[] " ^ j_expr e 
+	BasicDecl(d, e) -> j_data_type d ^ " " ^ j_expr e ^ ";"
+|   ListDecl(d, e) -> j_data_type d ^ "[] " ^ j_expr e ^ ";"
 
 and writeBinOp e1 o e2 = j_expr e1 ^ 
 		(match o with Add -> "+" | Sub -> "-" | Mult -> "*" |
@@ -76,8 +83,8 @@ and writeBinOp e1 o e2 = j_expr e1 ^
 
 
 and j_stmt = function
-	Block(ss) -> "{" ^ String.concat ";\n" ( List.rev (List.map j_stmt ss)) ^ ";\n}"	
-| 	Expr(e) -> j_expr e
+	Block(ss) -> "{\n" ^ String.concat "\n" ( List.rev (List.map j_stmt ss)) ^ "\n}"	
+| 	Expr(e) -> j_expr e ^ ";"
 |   Return(e) -> "return " ^ j_expr e
 | 	If(elif_l, s) -> writeIf elif_l s 
 | 	For(e, s) -> writeForLoop e s

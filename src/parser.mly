@@ -106,7 +106,7 @@ func_call:
 list_initializer:
 	func_call  { $1 }
 |	LBRACK list_initializer_list RBRACK { ListLit($2) }
-|	RBRACE func_call PERIOD PERIOD func_call LBRACK { ListGen($2, $5) }
+|	LBRACK func_call PERIOD PERIOD func_call RBRACK { ListGen($2, $5) }
 
 list_initializer_list:
 	func_call 	{ [$1] }
@@ -162,11 +162,16 @@ stmt:
 	expr SEMI { Expr($1) }
 |	RETURN expr SEMI { Return($2) }
 |	LBRACE stmt_list RBRACE	{ Block(List.rev $2) }
-|	IF LPAREN expr RPAREN stmt elif_list NOELSE { If(($3,$5)::$6, Block([])) }
-|	IF LPAREN expr RPAREN stmt elif_list ELSE stmt { If(($3,$5)::$6, $8) }
+|	conditional_stmt		{ $1 }
 |	FOR expr stmt { For($2, $3) }
 |	WHILE expr stmt { While($2, $3) }
 |	vdecl 		  { VarDecl($1) }
+
+conditional_stmt:
+|	IF LPAREN expr RPAREN stmt ELSE stmt { If([($3,$5)], $7) }
+|	IF LPAREN expr RPAREN stmt %prec NOELSE { If([($3,$5)],Block([]))}
+|	IF LPAREN expr RPAREN stmt elif_list %prec NOELSE { If(($3,$5)::$6, Block([])) }
+|	IF LPAREN expr RPAREN stmt elif_list ELSE stmt { If(($3,$5)::$6, $8) }
 
 stmt_list:
 	/* nothing */ { [] }
