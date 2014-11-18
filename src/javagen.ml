@@ -3,6 +3,8 @@ open Ast
 
 let rec j_prgm (prog) = 
 	"import fry.IOUtils;\n" ^
+	"import fry.FRYListFactory;\n" ^
+	"import java.util.ArrayList;\n" ^
 	"public class test{\n" ^
 	"public static void main(String[] args){\n" ^
 		String.concat "\n" ( List.rev (List.map j_stmt prog.stmts)) ^
@@ -17,6 +19,11 @@ and j_data_type = function
 (*|	Layout  ->	"Layout"
 | 	Table	->  "Table" *) 
 
+and j_obj_data_type = function
+	String 	-> "String"
+|   Int -> "Integer"
+|   Float -> "Float"
+|   Bool -> "Boolean"
 (************************************
 	STATEMENT HELPER FUNCTIONS
 *************************************)
@@ -26,8 +33,9 @@ and j_expr = function
 |   FloatLit(f) -> f
 |   IntLit(i) -> string_of_int i
 |   BoolLit(b) -> b
-(* |   ListLit of expr list
-|   ListGen of expr * expr 	(* List generator which keeps the min and max of the generated list *) *)
+| 	ListGen(e1, e2) -> "FRYListFactory.getGeneratedFryList(" ^ j_expr e1 ^ "," ^ j_expr e2 ^ ")"
+(* Should determine the data type in the check pass and add it to the constructor *)
+| 	ListLit(l) -> "new ArrayList<"  ^ "ADD GET DATA TYPE HERE>(" ^ String.concat ", " (List.map (fun e -> "new ADD GET DATA TYPE HERE(" ^ expr_s e ^ ")") l) ^ ")"
 |   Id(x) -> x
 |   Binop(e1, o, e2) -> writeBinOp e1 o e2 
 | 	Postop(e1, o) -> j_expr e1 ^ 
@@ -68,11 +76,11 @@ and writeIf (elif_l:(expr*stmt) list) (else_stmt:stmt) = (match elif_l with
 and writeWhileLoop (e:expr) (s:stmt) = 
 	"while(" ^ j_expr e ^ ") { \n" ^
 		j_stmt s ^
-	";\n}"
+	"\n}"
 
 and writeVarDecl = function
 	BasicDecl(d, e) -> j_data_type d ^ " " ^ j_expr e ^ ";"
-|   ListDecl(d, e) -> j_data_type d ^ "[] " ^ j_expr e ^ ";"
+|   ListDecl(d, e) -> "ArrayList<" ^ j_obj_data_type d ^ "> " ^ j_expr e ^ ";"
 
 and writeBinOp e1 o e2 = j_expr e1 ^ 
 		(match o with Add -> "+" | Sub -> "-" | Mult -> "*" |

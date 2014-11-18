@@ -13,8 +13,14 @@ diff_output(){
     out=$2
 
     diff $orig $out > ${log_dir}/${test}_diff.log
+    diff_ret=$?
+    if [ "$diff_ret" -ne "0" ]; then
+        report_error "ERROR EXECUTING DIFF"
+        return 1
+    fi
     if [ "$(cat ${log_dir}/${test}_diff.log | wc -l)" -ne "0" ]; then
-        report_error  
+        report_error "DIFFERENCE IN OUTPUT"
+        cat ${log_dir}/${test}_diff.log
         return 1
     else
         echo "TEST  $(filename $(echo $test | sed 's/\.fry//')) PASSED"
@@ -22,9 +28,11 @@ diff_output(){
     fi
 }
 
+# Optionally takes a message as the first argument
 report_error(){
         echo "************************"
         echo "ERROR IN TEST $(filename $(echo $test | sed 's/\.fry//'))"
+        echo "$1"
         echo "*************************"
 }
 
@@ -34,7 +42,7 @@ check_and_report_errors(){
 
     exceptions=$(grep "exception|Exception|EXCEPTION" ${log_file})
     if [ "$(cat ${log_file} | wc -l)" -ne "0" ]; then
-        report_error
+        report_error "ERROR IN LOG FILE $log_file"
         return 1
     fi
 
@@ -95,6 +103,9 @@ cd ${root_output_dir}
 
 for test_src in $tests; do
     test=$(filename $(echo $test_src | sed 's/\.fry//'))
+    
+    echo ""
+    echo "Running test ${test}..."
 
     log_dir="${root_log_dir}/${test}/"
     output_dir="${root_output_dir}/${test}/"
@@ -131,7 +142,9 @@ for test_src in $tests; do
         rm -f ${log_dir}/${test}_javac.log
         rm -f ${log_dir}/${test}_diff.log
     fi
-
+    
+    echo "Finished test ${test}..."
+    echo ""
 done
 
 cd ..

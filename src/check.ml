@@ -19,6 +19,9 @@ type sast_expr =
 |   Id(x) -> Expr(Id(x))
  *)
 let check_stmt x = x
+(*
+	ListGen(e1, e2) -> 
+*)
 
 let check_fdecl x = x
 

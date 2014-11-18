@@ -7,7 +7,7 @@
 %token LAYOUT LIST TABLE IN NOT FROM
 %token IF ELSE ELIF AND OR CONT BREAK
 %token INC DEC PERIOD COLON
-%token RETURN FOR WHILE
+%token RETURN FOR WHILE TO
 %token <int> INT_LIT
 %token <string> FLOAT_LIT BOOL_LIT STRING_LIT ID
 %token EOF
@@ -106,7 +106,7 @@ func_call:
 list_initializer:
 	func_call  { $1 }
 |	LBRACK list_initializer_list RBRACK { ListLit($2) }
-|	LBRACK func_call PERIOD PERIOD func_call RBRACK { ListGen($2, $5) }
+|	LBRACK func_call TO func_call RBRACK { ListGen($2, $4) }
 
 list_initializer_list:
 	func_call 	{ [$1] }

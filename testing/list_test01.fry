@@ -2,11 +2,8 @@
 
 list_test01.fry
 
-Tests list creation
+Tests list creation with generator
 
 #/
 
-int List my_int = [1, 2, 3 ];
-str List str_list = [ "TEST1", "TEST2", "HELLOWORLD" ];
-bool List bool_list = [ true, false, true, true];
-float List flt_list = [ 4.34, 5.711, 42.745]; 
+int List my_int2 = [1 to 6];

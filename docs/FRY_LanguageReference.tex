@@ -355,7 +355,7 @@ A List declaration consists of the keyword \texttt{List} followed by an identifi
 \begin{tabbing}
 	\= \emph{List}\=\emph{-intializer} : \\
 		\> \> \texttt{[} \emph{List-declaration-list} \texttt{]} \\
-		\>\> \texttt{[}\emph{identifier-or-constant}\texttt{..}\emph{identifier-or-constant}\texttt{]}
+		\>\> \texttt{[}\emph{identifier-or-constant}\texttt{ to }\emph{identifier-or-constant}\texttt{]}
 \end{tabbing}
 
 A list-initializer intializes an unnamed list one of two ways. The first way defines each element of the list explicitly in square brackets using a \emph{List-declaration-list}. The second way requires two integer-valued \emph{identifier-or-constant} and generates a list ranging from the first \emph{identifier-or-constant} to the second \emph{identifier-or-constant}. The first \emph{identifier-or-constant} must be smaller than the second.
@@ -378,7 +378,7 @@ For example,
 List l_int = [1,2,3,4]
 List l_empty
 List l_str = ["This", "is", "a", "list"]
-List l_int = [1 .. 100]
+List l_int = [1 to 100]
 \end{lstlisting}
 declares a list containing the first for natural integers, an empty list, and a list of strings.
 

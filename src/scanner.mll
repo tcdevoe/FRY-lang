@@ -46,6 +46,7 @@ rule token = parse
 |   "and"   { AND  }
 |   "or"    { OR }
 |	"for"	{ FOR }
+|	"to"	{ TO }
 |	"while" { WHILE }
 |   "continue"  { CONT }
 |   "break"     { BREAK }
