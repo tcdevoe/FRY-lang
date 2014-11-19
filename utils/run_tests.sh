@@ -86,7 +86,7 @@ fi
 
 if [ -z "${tests}" ]; then
     tests=$(ls ${test_dir}/*.fry)
-    root_output_dir="$(pwd)/fry_tests_$(date +%m%d_%H%M)"
+    root_output_dir="$(pwd)/fry_tests_$(date +%m%d)"
 else
     root_output_dir="$(pwd)/"
 fi
@@ -130,11 +130,17 @@ for test_src in $tests; do
     javac test.java 2>${log_dir}/${test}_javac.log
     error=$(cat ${log_dir}/${test}_javac.log | wc -l)
     if [ "${error}" -ne "0" ]; then
-        report_error
+        report_error "JAVA COMPILE ERROR"
         continue
     fi
 
     java test > ${output_dir}/${test}.tmp
+    error=$?
+    if [ "${error}" -ne "0" ]; then
+        report_error "JAVA RUNTIME ERROR"
+        continue
+    fi
+
     diff_output ${output_dir}/${test}.out ${output_dir}/${test}.tmp
     error=$?
     if [ "${error}" -eq "0" ]; then

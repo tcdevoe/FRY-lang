@@ -1,6 +1,6 @@
 (* Ref is List/Layout element reference *)
 type op = Add | Sub | Mult | Div | Equal | Neq | Less | Leq | Greater | Geq | In | Notin | And | Or | From
-type dataType  = String | Float | Bool | Int | Layout | Table
+type dataType  = String | Float | Bool | Int | Layout | Table | List | Void
 type post = Inc | Dec 
 type pre = Not
 type ref = ListRef | LayRef
@@ -89,7 +89,6 @@ let var_decl_s = function
 |   ListDecl(d,e) -> "ListDecl (" ^ data_type_s d ^ " " ^ expr_s e ^ ")"
 
 
-(* TODO: FINISH PRINT STMTS *)
 let rec stmt_s = function
   Block(ss) -> "Block [" ^ String.concat ",\n"
   								(List.map (fun s -> "(" ^ stmt_s s ^ ")") ss) ^ "]"

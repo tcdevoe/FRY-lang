@@ -5,7 +5,8 @@ JFLAGS = -g
 	javac $(JFLAGS) $*.java
 
 CLASSES = \
-	fry/IOUtils.java
+	fry/IOUtils.java \
+	fry/FRYListFactory.java
 
 default: classes
 

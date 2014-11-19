@@ -1,0 +1,10 @@
+/#
+This tests the while loop
+#/
+
+int x = 5;
+
+while ( x > 0 ) {
+    Write(stdout,x);
+    x--;
+}

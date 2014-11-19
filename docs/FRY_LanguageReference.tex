@@ -230,8 +230,8 @@ These operators are grouped left to right.
 \begin{itshape}
 \begin{tabbing}
 	\= multipl\=icative-expression : \\
-		\>\> multiplicative-expression*multiplicative-expression \\		
-		\>\> multiplicative-expression/multiplicative-expression \\
+		\>\> unary-expression \\		
+		\>\> multiplicative-expression*multiplicative-expression \\
 		\>\> multiplicative-expression/multiplicative-expression
 \end{tabbing}
 \end{itshape}
@@ -249,7 +249,7 @@ These operators are grouped left to right.
 \end{tabbing}
 \end{itshape}
 
-$+$ and $-$ denote addition and subtraction of the two operands respectively. Additionally the $+$ also denotes string concatenation. For $-$, the expressions on either side of the operators must be either integer or floating point valued. For $+$, the expressions can be integer, floating point or strings.
+$+$ and $-$ denote addition and subtraction of the two operands respectively. Additionally the $+$ also denotes string concatenation. For $-$, the expressions on either side of the operators must be either integer or floating point valued. For $+$, the expressions can be integer, floating point or strings. Both operands must be strings or both operands must be float/int. You cannot mix string operands with numeric operands.
 
 \subsection{Containment Operators}
 \begin{tabbing}

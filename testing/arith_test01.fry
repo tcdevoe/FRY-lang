@@ -1,0 +1,8 @@
+/# 
+Tests the basic arithmetic operations
+#/
+
+Write(stdout, 20 + 25);
+Write(stdout, 25 - 20);
+Write(stdout, 15 * 5);
+Write(stdout, 15 / 5);
