@@ -13,6 +13,6 @@ let _ =
 		Raw -> print_string (Ast.program_s program)
 	 |  Ast -> print_string "Add In"
 	 |  Compile -> (* Need to add in Syntax Checking before Javagen *)
-	 			let checked_program = Check.check_prgm program in 
+	 			let checked_program = Sem_analysis.check_prgm program in 
 	 			let compiled_program = Javagen.j_prgm checked_program
 	 				in print_endline compiled_program

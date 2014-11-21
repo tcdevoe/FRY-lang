@@ -521,10 +521,17 @@ Conditional statements control the flow of a program by performing different set
 
 \begin{tabbing}
 	\= \emph{cond}\=\emph{itional-statements} : \\
-		\> \> \texttt{if (}\emph{expression}\texttt{) \{} \emph{statement-list} \texttt{\}}\\
-		\>\>  \texttt{if (}\emph{expression}\texttt{) \{} \emph{statement-list} \texttt{\}} \texttt{else}\texttt{ \{} \emph{statement-list} \texttt{\}} \\
-		\>\>  \texttt{if (}\emph{expression}\texttt{) \{} \emph{statement-list} \texttt{\}} \texttt{elif (}\emph{expression}\texttt{) \{} \emph{statement-list} \texttt{\}}\texttt{ else} \texttt{ \{} \emph{statement-list} \texttt{\}} \\
+		\> \> \texttt{if (}\emph{expression}\texttt{)} \emph{statement-list}\\
+		\>\>  \texttt{if (}\emph{expression}\texttt{)} \emph{statement-list} \texttt{} \texttt{else}\texttt{ \{} \emph{statement-list} \texttt{\}} \\
+		\>\>  \texttt{if (}\emph{expression}\texttt{)} \emph{statement-list} \texttt{} \emph{elif-list} \texttt{ else} \emph{statement-list} \\
 \end{tabbing}
+\begin{tabbing}
+	\= \emph{eli}\=\emph{f-list} : \\
+		\> \> \texttt{elif (}\emph{expression}\texttt{)} \emph{statement-list} \\
+		\> \> \emph{elif-list} \texttt{elif (}\emph{expression}\texttt{)} \emph{statement-list}\\
+\end{tabbing}
+
+
 
 The three different conditional statements here all operate on a similar idea. Based on the value the expression in parentheses, which must be a boolean-valued expression, do or do not perform the statements in the curly braces. For an \emph{if} statement, if the expression in parentheses is true, then the statements inside the \emph{if} block is evaluated. If that \emph{if} statement has an attached \emph{else} block, then the else block is evaluated if the expression is false. 
 
@@ -534,7 +541,7 @@ If there are \emph{elif} blocks, then if any expression is true, the statement i
 
 \begin{tabbing}
 	\= \emph{iter}\=\emph{ative-statements}: \\
-	\> \> \texttt{for} \emph{identifier} \texttt{in} \emph{iterator} \texttt{\{} \emph{statement-list} \texttt{\}} \\
+	\> \> \texttt{for} \emph{identifier} \texttt{<-} \emph{iterator} \texttt{\{} \emph{statement-list} \texttt{\}} \\
 	\> \> \texttt{while (} \emph{expression} \texttt{)} \texttt{\{} \emph{statement-list} \texttt{\}}
 \end{tabbing}
 

@@ -31,7 +31,7 @@ type stmt =
 |   Expr of expr
 |   Return of expr
 |   If of (expr * stmt) list * stmt
-|   For of expr * stmt (* needs to be a X in Y binop expr *)
+|   For of expr * expr * stmt (* needs to be a X in Y binop expr *)
 |   While of expr * stmt
 | 	VarDecl of var_decl 
 
@@ -102,7 +102,7 @@ let rec stmt_s = function
 					"Elif (" ^ expr_s (fst tl) ^ ", " ^ stmt_s (snd tl) ^ ")" ) t) ) ^
 				(* Don't really care about empty else for pretty printing, see javagen for implementation *)
 				"\n Else (" ^ stmt_s s ^ ")"				
-| For(e, s) -> "For (" ^ expr_s e ^ ") (" ^ stmt_s s ^ ") "
+| For(e1, e2, s) -> "For (" ^ expr_s e1 ^ " in " ^ expr_s e2 ^ ") (" ^ stmt_s s ^ ") "
 | While(e, s) -> "While (" ^ expr_s e ^ ") (" ^ stmt_s s ^ ") "
 | VarDecl(v) -> var_decl_s v
 

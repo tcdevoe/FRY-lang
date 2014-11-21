@@ -15,6 +15,7 @@
 %nonassoc NOELSE
 %nonassoc ELSE
 %right ASSIGN
+%left LBRACK
 %left OR
 %left AND
 %left EQ NEQ
@@ -163,14 +164,12 @@ stmt:
 |	RETURN expr SEMI { Return($2) }
 |	LBRACE stmt_list RBRACE	{ Block(List.rev $2) }
 |	conditional_stmt		{ $1 }
-|	FOR expr stmt { For($2, $3) }
+|	FOR expr FROM expr stmt { For($2, $4, $5) }
 |	WHILE expr stmt { While($2, $3) }
 |	vdecl 		  { VarDecl($1) }
 
 conditional_stmt:
-|	IF LPAREN expr RPAREN stmt ELSE stmt { If([($3,$5)], $7) }
-|	IF LPAREN expr RPAREN stmt %prec NOELSE { If([($3,$5)],Block([]))}
-|	IF LPAREN expr RPAREN stmt elif_list %prec NOELSE { If(($3,$5)::$6, Block([])) }
+	IF LPAREN expr RPAREN stmt elif_list %prec NOELSE { If(($3,$5)::$6, Block([])) }
 |	IF LPAREN expr RPAREN stmt elif_list ELSE stmt { If(($3,$5)::$6, $8) }
 
 stmt_list:
