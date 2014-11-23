@@ -1,4 +1,4 @@
-OBJS = ast.cmo sem_analysis.cmo javagen.cmo parser.cmo scanner.cmo fry.cmo sast.cmi
+OBJS = ast.cmo sem_analysis.cmo javagen.cmo parser.cmo scanner.cmo fry.cmo
 
 fry : $(OBJS) java_make
 	ocamlc -g -o fry $(OBJS)

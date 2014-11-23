@@ -71,7 +71,7 @@ and writeIf (elif_l:(s_expr * s_stmt) list) (else_stmt: s_stmt) = (match elif_l 
 					String.concat "\n" (List.map (fun tl -> 
 					"else if (" ^ j_expr (fst tl) ^ " )\n" ^ j_stmt (snd tl) ^ "\n" ) t) ) ^
 				(match else_stmt with
-					S_Block([]) -> ""
+					S_Block(_,[]) -> ""
 				| 	_ -> "else\n" ^ j_stmt else_stmt ^ "\n")	
 
 and writeWhileLoop (e: s_expr) (s: s_stmt) = 
@@ -92,9 +92,9 @@ and writeBinOp e1 o e2 = j_expr e1 ^
 
 
 and j_stmt = function
-	S_Block(ss) -> "{\n" ^ String.concat "\n" ( List.rev (List.map j_stmt ss)) ^ "\n}"	
-| 	S_Expr(e) -> j_expr e ^ ";"
-|   S_Return(e) -> "return " ^ j_expr e
+	S_Block(syms,ss) -> "{\n" ^ String.concat "\n" ( List.rev (List.map j_stmt ss)) ^ "\n}"	
+| 	S_Expr(e,t) -> j_expr e ^ ";"
+|   S_Return(e,t) -> "return " ^ j_expr e
 | 	S_If(elif_l, s) -> writeIf elif_l s 
 | 	S_For(e1, e2, s) -> writeForLoop e1 e2 s
 | 	S_While(e, s) -> writeWhileLoop e s

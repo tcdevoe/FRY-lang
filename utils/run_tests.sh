@@ -91,7 +91,7 @@ else
     root_output_dir="$(pwd)/"
 fi
 
-FRY="${FRY_HOME}/src/fry"
+export PATH=${sandbox_dir}/src/:$PATH
 
 ulimit -t 30
 
