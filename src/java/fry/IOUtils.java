@@ -17,6 +17,10 @@ import java.io.IOException;
 
 public class IOUtils {
 
+	public static String stdout = "stdout";
+	public static String stderr = "stderr";
+	public static String stdin = "stdin";
+
 	public static void Write(String outputSpec, int expr){
 		Write(outputSpec, Integer.toString(expr));
 	}

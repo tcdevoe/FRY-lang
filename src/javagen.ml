@@ -8,7 +8,7 @@ let rec j_prgm (prog: Sast.s_program) =
 	"import java.util.ArrayList;\n" ^
 	"public class test{\n" ^
 	"public static void main(String[] args){\n" ^
-		String.concat "\n" ( List.rev (List.map j_stmt prog.stmts)) ^
+		String.concat "\n" (List.map j_stmt prog.stmts) ^
 		"\n}\n}"
 
 and j_data_type = function
@@ -46,19 +46,19 @@ and j_expr = function
 	(match r with ListRef -> "ListRef" | LayRef -> "LayRef") ^ 
 	" (" ^ expr_s e2 ^ ") " ^ " (" ^ expr_s e3 ^ ") " *)
 | 	S_Assign(v, e) ->  v ^ " = " ^ j_expr e
-(*|   Call(f, es) -> (match f with 
+|   S_Call(f, es) -> (match f with 
 	| "Write" -> "IOUtils.Write" ^ "(" ^
 		String.concat ", " (List.map elemForIO es) ^ ")"		
 	| "Read" -> "IOUtils.Read" ^ "(" ^
 		String.concat ", " (List.map elemForIO es) ^ ")"
 	| _ -> f ^ "(" ^
-		String.concat ", " (List.map (fun e -> j_expr e ) es) ^ ")")*)
+		String.concat ", " (List.map (fun e -> j_expr e ) es) ^ ")")
 (* | SetBuild(e1, id, e2, e3) -> "SetBuild (" ^ expr_s e1 ^ ") " ^ id ^ " from (" ^ expr_s e2 ^ ") (" ^ expr_s e3 ^ ") " *)
 | S_Noexpr -> ""
 
-and elemForIO e = match e with S_Id("stdout", Void) -> "\"stdout\""
-							| 	S_Id("stderr", Void) -> "\"stderr\""
-							|  	S_Id("stdin", Void) ->	"\"stdin\"" 
+and elemForIO e = match e with S_Id("stdout", String) -> "IOUtils.stdout"
+							| 	S_Id("stderr", String) -> "IOUtils.stderr"
+							|  	S_Id("stdin", String) ->	"IOUtils.stdin" 
 							| 	_ -> j_expr e
 
 and writeForLoop e1 e2 s = 

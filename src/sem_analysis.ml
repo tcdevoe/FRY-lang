@@ -10,6 +10,8 @@ open Ast
 open Sast
 exception Error of string
 
+let print_sym_tbl (syms: symbol_table) = let str = "SYMBOL TABLE: \n[ " ^ String.concat "\n" (List.map (fun (typ, name, _) -> "[" ^ Ast.data_type_s typ ^ " " ^ name ^ "]") syms.variables) ^ "]" 
+											in print_endline str
 
 let rec find_variable (scope: symbol_table) name = 
 	try
@@ -17,7 +19,13 @@ let rec find_variable (scope: symbol_table) name =
 	with Not_found ->
 		match scope.parent with
 		Some(parent) -> find_variable parent name
-		| _ -> raise (Error("Unrecognized identifier " ^ name ^ "."))
+		| _ -> raise (Error("Unrecognized identifier " ^ name))
+
+let rec find_func (funcs: s_func_decl list) fname = 
+	try 
+		let func = List.find (fun fn -> fn.fname = fname ) funcs in
+		func.fname, func.ret_type
+	with Not_found -> raise (Error("Unrecgonized Function call " ^ fname))
 
 let get_math_binop (t1: dataType) (t2: dataType) (env: translation_environment) = 
 	match (t1, t2) with
@@ -68,7 +76,7 @@ match e with
 	let vdecl = try
 		find_variable env.scope x
 	with Not_found ->
-		raise (Error("Undeclared identifier " ^ x ^ "."))
+		raise (Error("Undeclared identifier " ^ x ))
 	in
 	let (typ,vname,_) = vdecl in
 		S_Id(vname,typ), typ
@@ -81,9 +89,10 @@ match e with
 | 	Preop(o,e1) -> get_Preop_return e1 o env
 (* | 	Ref(e1, r, e2, e3) ->  NEED TO ADD LIST/LAYOUT References*)
 | 	Assign(v, e) -> check_assign v e env
-(* | 	Call(f, es) -> "Call " ^ f ^ " [" ^
-		String.concat ", " (List.map (fun e -> "(" ^ expr_s e ^ ")") es) ^ "]"
-| 	SetBuild(e1, id, e2, e3) -> "SetBuild (" ^ expr_s e1 ^ ") " ^ id ^ " from (" ^ expr_s e2 ^ ") (" ^ expr_s e3 ^ ") " *)
+| 	Call(f, es) -> let sexpr_l = List.map (fun e -> let ex_l = check_expr e env in fst ex_l) es in
+				   let (fname, ret_type) = find_func env.funcs f in
+				   S_Call(fname, sexpr_l), ret_type
+(* | 	SetBuild(e1, id, e2, e3) -> "SetBuild (" ^ expr_s e1 ^ ") " ^ id ^ " from (" ^ expr_s e2 ^ ") (" ^ expr_s e3 ^ ") " *)
 | 	Noexpr -> S_Noexpr, Void
 
 and get_Binop_return (e1: expr) (o: op) (e2: expr) (env: translation_environment) : (Sast.s_expr * Ast.dataType) = 
@@ -212,14 +221,13 @@ and check_while (e: expr) (s: stmt) (env: translation_environment) =
 	else
 		raise (Error("While expression must be boolean-valued"))
 
-and check_var_decl (v: var_decl) (env: translation_environment) = 
+and check_var_decl (v: var_decl) (env: translation_environment) =
 	match v with
 	BasicDecl(typ,e) -> (match e with
 								Id(x) -> let exist = List.exists (fun (_, s, _) -> s = x) env.scope.variables in
 										if exist then
 											raise (Error("Identifier already declared"))
 										else
-											env.scope.variables <- (typ, x, S_Noexpr)::env.scope.variables;
 											S_VarDecl(S_BasicDecl(typ, S_Id(x, typ)))
 							|   Assign(x,e) ->  let exist = List.exists (fun (_, s, _) -> s = x) env.scope.variables in
 										if exist then
@@ -227,7 +235,6 @@ and check_var_decl (v: var_decl) (env: translation_environment) =
 										else
 										env.scope.variables <- (typ, x, S_Noexpr)::env.scope.variables;
 										let (e',_) = check_expr e env in
-											env.scope.variables <- (typ, x, e')::env.scope.variables;
 											S_VarDecl(S_BasicDecl(typ, S_Assign(x, e')))
 							|  _ -> raise (Error ("Not a valid assignment")))
 | 	ListDecl(typ, e) -> (match e with
@@ -246,6 +253,7 @@ and check_var_decl (v: var_decl) (env: translation_environment) =
  											env.scope.variables <- (typ, x, e')::env.scope.variables;
 											S_VarDecl(S_ListDecl(typ, S_Assign(x, e')))
 							|  _ -> raise (Error ("Not a valid assignment")))
+
 let check_formals (decl: var_decl) (env: translation_environment) =
 	match decl with
 	BasicDecl(typ,e) -> (match e with
@@ -262,12 +270,38 @@ let check_fdecl (func: Ast.func_decl) (env: translation_environment) : (s_func_d
 	if env.in_func then
 		raise (Error ("Cannot nest function declarations"))
 	else
-		let env' = { funcs = env.funcs; scope = {parent = Some(env.scope); variables = env.scope.variables}; return_type = func.ret_type; in_func = true} in 
+		let env' = { funcs = env.funcs; scope = {parent = Some(env.scope); variables = env.scope.variables}; 
+		return_type = func.ret_type; in_func = true} in 
 		let f = { Sast.fname = func.fname; Sast.ret_type = func.ret_type; Sast.formals = (List.map (fun x -> check_formals x env') func.formals); Sast.body = (List.map (fun x -> check_stmt x env') func.body );} in
 		env.funcs <- f::env.funcs; f
 
-
+(* Need to initialize reserved keywords and built-in funcs *)
+let init_env : (translation_environment) =
+	let func_i = [{ fname = "Write"; 
+					ret_type = Void; 
+					formals = [S_BasicDecl(String, S_Id("o_file", String)); S_BasicDecl(String, S_Id("output_str", String))];
+					body = [S_Expr(S_Noexpr, Void)];};
+					{ fname = "Write"; 
+					ret_type = Void; 
+					formals = [S_BasicDecl(String, S_Id("o_file", String)); S_BasicDecl(Int, S_Id("output_str", Int))];
+					body = [S_Expr(S_Noexpr, Void)];};
+					{ fname = "Write"; 
+					ret_type = Void; 
+					formals = [S_BasicDecl(String, S_Id("o_file", String)); S_BasicDecl(Float, S_Id("output_str", Float))];
+					body = [S_Expr(S_Noexpr, Void)];};
+					{ fname = "Write"; 
+					ret_type = Void; 
+					formals = [S_BasicDecl(String, S_Id("o_file", String)); S_BasicDecl(Bool, S_Id("output_str", Bool))];
+					body = [S_Expr(S_Noexpr, Void)];};
+				  { fname = "Read";
+				  	ret_type = Void;
+				  	formals = [S_BasicDecl(String, S_Id("o_file", String))];
+				  	body = [S_Expr(S_Noexpr, Void)]; }; ] in
+	let scope_i = { parent = None; 
+				   	variables = [(String, "stdout", S_Noexpr); (String, "stderr", S_Noexpr)]} in 
+	{ funcs = func_i ; scope = scope_i; return_type = Void; in_func = false } 			   	
 
 let check_prgm (prog: Ast.program ) : (Sast.s_program) = 
-	let env = { funcs = [] ; scope = {parent = None; variables = []}; return_type = Void; in_func = false } in
-	{ Sast.stmts = (List.map (fun x -> check_stmt x env) prog.stmts );  Sast.funcs = (List.map (fun x -> check_fdecl x env) prog.funcs) } 
+	let env = init_env in
+	{ Sast.stmts = (List.map (fun x -> check_stmt x env) (List.rev prog.stmts) );  Sast.funcs = (List.map (fun x -> check_fdecl x env) prog.funcs) } 
+

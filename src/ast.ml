@@ -1,6 +1,6 @@
 (* Ref is List/Layout element reference *)
 type op = Add | Sub | Mult | Div | Equal | Neq | Less | Leq | Greater | Geq | In | Notin | And | Or | From
-type dataType  = String | Float | Bool | Int | Layout | Table | List | Void
+type dataType  = String | Float | Bool | Int | Layout | Table | List | Void | Res
 type post = Inc | Dec 
 type pre = Not
 type ref = ListRef | LayRef
