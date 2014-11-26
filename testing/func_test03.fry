@@ -1,0 +1,16 @@
+/#
+
+    func_test01.fry
+
+    This tests creating a basic function
+
+#/
+
+str List test(){
+    str List l_str = ["test","test2","test3\n","test4\ntest5"];
+    ret l_str;
+}
+
+str List my_str = test();
+for ( s <- my_str )
+    Write(stdout,s);

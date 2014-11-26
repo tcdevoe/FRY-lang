@@ -6,9 +6,10 @@
 
 #/
 
-str test(){
-    str x = "test";
-    ret x;
+int test(){
+    int x = 5;
+    int y = 6;
+    ret x+y;
 }
 
 Write(stdout, test());

@@ -81,9 +81,9 @@ match e with
 	let (typ,vname,_) = vdecl in
 		S_Id(vname,typ), typ
 (*  need to check both expressions are integers for List generator *)
-| 	ListGen(e1, e2) -> check_list_gen e1 e2 env, List
+| 	ListGen(e1, e2) -> let (e,t) = check_list_gen e1 e2 env in e, List(t)
 (* Need to check that every expression in the list has the same type as the first expr *)
-| 	ListLit(l) -> check_list_lit l env, List
+| 	ListLit(l) ->  let (e,t) = check_list_lit l env in e, List(t)
 | 	Binop(e1, o, e2) -> get_Binop_return e1 o e2 env	 
 | 	Postop(e1, o) -> get_Postop_return e1 o env
 | 	Preop(o,e1) -> get_Preop_return e1 o env
@@ -152,11 +152,11 @@ and check_list_gen (e1: expr) (e2: expr) (env: translation_environment) =
 	let (e1, t1) = check_expr e1 env in 
 	let (e2, t2) = check_expr e2 env in
 	if t1 = Int && t2 = Int then
-		S_ListGen(e1, e2)
+		S_ListGen(e1, e2), t1
 	else
 	   	raise (Error("List generator must have integer valued ranges."))
 
-and check_list_lit (l: expr list) (env: translation_environment) : (s_expr) = 
+and check_list_lit (l: expr list) (env: translation_environment)  = 
 	let e = List.hd l in
 	let (_,t) = check_expr e env in 
 	let s_l = List.map (fun ex -> let (e',t') = check_expr ex env in
@@ -164,7 +164,7 @@ and check_list_lit (l: expr list) (env: translation_environment) : (s_expr) =
 						e'
 					else
 						raise (Error("Elements of a list literal must all be of the same type"))) l 
-	in S_ListLit(s_l, t)
+	in S_ListLit(s_l, t), t
 
 
 let rec check_stmt (s: Ast.stmt) (env: translation_environment) = match s with
@@ -197,21 +197,28 @@ and check_return (e: expr) (env: translation_environment) =
 		if t = env.return_type then
 			S_Return(e, t)
 		else
-			raise (Error("Must return compatible type"))
+			raise (Error("Must return compatible type. Expected type " ^ data_type_s env.return_type ^ ", found type " ^ data_type_s t ))
 	else
 		raise (Error("Cannot return outside of a function"))
 
 (* e1 must be an identifier; e2 must be a list type *)
 and check_for (e1: expr) (e2: expr) (s: stmt) (env: translation_environment) = 
-	let (e1, t1) = check_expr e1 env in
-	let (e2, t2) = check_expr e2 env in
 	match e1 with
-	 S_Id(_,_) -> if t2 = List then
-					let s = check_stmt s env in
-					S_For(e1, e2, s)
-				else
-					raise (Error("Second arg of for loop must be a List type"))
-	| _ -> raise (Error("First arg of for loop must be an identifier"))
+	Id(x) -> let scope' = { env.scope with variables = (Void, x, S_Noexpr)::env.scope.variables } in
+		     let env' = { env with scope = scope'} in
+			 let (e1, t1) = check_expr e1 env' in
+			 let (e2, t2) = check_expr e2 env' in
+				 env'.scope.variables <- (t2, x, S_Noexpr)::env.scope.variables;
+				 match e2 with
+				  S_Id(name, typ) -> let (typ,_,exp) = find_variable env'.scope name in
+				 	(match typ with 
+				 		List(t) -> let s = check_stmt s env' in S_For(S_Id(x, t2), e2, s)
+				 	|   _ -> raise (Error("Must iterate over a list type. Type " ^ data_type_s typ ^ " found")))
+				| S_ListLit(_,_) -> let s = check_stmt s env' in S_For(S_Id(x, t2), e2, s)
+				| S_ListGen(_,_) -> let s = check_stmt s env' in S_For(S_Id(x, t2), e2, s) 
+				| _ -> raise (Error("How did you get here?"))
+	|	_ -> raise (Error("First arg of for loop must be an identifier"))
+
 
 and check_while (e: expr) (s: stmt) (env: translation_environment) = 
 	(* check expr is boolean valued *)
@@ -242,15 +249,15 @@ and check_var_decl (v: var_decl) (env: translation_environment) =
 										if exist then
 											raise (Error("Identifier already declared"))
 										else
-											env.scope.variables <- (typ, x, S_Noexpr)::env.scope.variables;
-											S_VarDecl(S_ListDecl(typ, S_Id(x, typ)))
+											env.scope.variables <- (List(typ), x, S_Noexpr)::env.scope.variables;
+											S_VarDecl(S_ListDecl(List(typ), S_Id(x, typ)))
 							|   Assign(x,e) ->  let exist = List.exists (fun (_, s, _) -> s = x) env.scope.variables in
 										if exist then
 											raise (Error("Identifier already declared"))
 										else
-										env.scope.variables <- (typ, x, S_Noexpr)::env.scope.variables;
+										env.scope.variables <- (List(typ), x, S_Noexpr)::env.scope.variables;
  										let (e',_) = check_expr e env in
- 											env.scope.variables <- (typ, x, e')::env.scope.variables;
+ 											env.scope.variables <- (List(typ), x, e')::env.scope.variables;
 											S_VarDecl(S_ListDecl(typ, S_Assign(x, e')))
 							|  _ -> raise (Error ("Not a valid assignment")))
 

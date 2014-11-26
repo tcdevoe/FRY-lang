@@ -1,6 +1,6 @@
 (* Ref is List/Layout element reference *)
 type op = Add | Sub | Mult | Div | Equal | Neq | Less | Leq | Greater | Geq | In | Notin | And | Or | From
-type dataType  = String | Float | Bool | Int | Layout | Table | List | Void | Res
+type dataType  = String | Float | Bool | Int | Layout | Table | List of dataType | Void | Res
 type post = Inc | Dec 
 type pre = Not
 type ref = ListRef | LayRef
@@ -75,13 +75,14 @@ let rec expr_s = function
 | SetBuild(e1, id, e2, e3) -> "SetBuild (" ^ expr_s e1 ^ ") " ^ id ^ " from (" ^ expr_s e2 ^ ") (" ^ expr_s e3 ^ ") "
 | Noexpr -> "Noexpr"
 
-let data_type_s = function
+let rec data_type_s = function
   String -> "String"
 | Float -> "Float" 
 | Bool -> "Bool" 
 | Int -> "Int"  
 | Layout -> "Layout" 
 | Table -> "Table"
+| List(t) ->  data_type_s t ^ " List"
 
 
 let var_decl_s = function 
@@ -113,6 +114,6 @@ String.concat "\n" (List.map stmt_s f.body) ^
 "]}\n"
 
 (* stmt list is built backwards, need to reverse *)
-let program_s prog = "([" ^  String.concat ",\n" (List.rev (List.map stmt_s prog.stmts)) ^ "],\n" ^ 
+let program_s prog = "([" ^  String.concat ",\n" ((List.map stmt_s prog.stmts)) ^ "],\n" ^ 
 					  "[" ^ String.concat ",\n" (List.map func_decl_s prog.funcs) ^"])"
 

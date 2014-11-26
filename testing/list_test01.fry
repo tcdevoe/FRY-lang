@@ -1,9 +1,0 @@
-/#
-
-list_test01.fry
-
-Tests list creation with generator
-
-#/
-
-int List my_int2 = [1 to 6];

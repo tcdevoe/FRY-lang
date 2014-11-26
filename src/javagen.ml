@@ -6,8 +6,10 @@ let rec j_prgm (prog: Sast.s_program) =
 	"import fry.IOUtils;\n" ^
 	"import fry.FRYListFactory;\n" ^
 	"import java.util.ArrayList;\n" ^
+	"import java.util.Arrays;\n" ^ 
 	"public class test{\n" ^
-	"public static void main(String[] args){\n" ^
+	String.concat "\n" (List.map j_fdecl prog.funcs) ^
+	"\n\npublic static void main(String[] args){\n" ^
 		String.concat "\n" (List.map j_stmt prog.stmts) ^
 		"\n}\n}"
 
@@ -20,11 +22,16 @@ and j_data_type = function
 (*|	Layout  ->	"Layout"
 | 	Table	->  "Table" *) 
 
-and j_obj_data_type = function
+and j_obj_data_type (typ: dataType)  = match typ with
 	String 	-> "String"
 |   Int -> "Integer"
 |   Float -> "Float"
 |   Bool -> "Boolean"
+|   List(t) ->  "ArrayList<" ^ j_obj_data_type t ^ ">"
+
+and getListType = function
+	List(t) -> j_obj_data_type t
+
 (************************************
 	STATEMENT HELPER FUNCTIONS
 *************************************)
@@ -36,7 +43,7 @@ and j_expr = function
 |   S_BoolLit(b) -> b
 | 	S_ListGen(e1, e2) -> "FRYListFactory.getGeneratedFryList(" ^ j_expr e1 ^ "," ^ j_expr e2 ^ ")"
 (* Should determine the data type in the check pass and add it to the constructor *)
-| 	S_ListLit(l, typ) -> "new ArrayList<"  ^ j_obj_data_type typ ^ ">(" ^ String.concat ", " (List.map (fun e -> "new (" ^ j_expr e ^ ")") l) ^ ")"
+| 	S_ListLit(l, typ) -> "new ArrayList<"  ^ j_obj_data_type typ ^ ">(Arrays.asList(" ^ String.concat ", " (List.rev (List.map (fun e -> "new " ^ j_obj_data_type typ ^ "(" ^ j_expr e ^ ")") l)) ^ "))"
 |   S_Id(x,_) -> x
 |   S_Binop(e1, o, e2) -> writeBinOp e1 o e2 
 | 	S_Postop(e1, o) -> j_expr e1 ^ 
@@ -61,8 +68,8 @@ and elemForIO e = match e with S_Id("stdout", String) -> "IOUtils.stdout"
 							|  	S_Id("stdin", String) ->	"IOUtils.stdin" 
 							| 	_ -> j_expr e
 
-and writeForLoop e1 e2 s = 
-	"//TODO WRITE FORLOOP"
+and writeForLoop e1 e2 s = match e1 with 
+	S_Id(name, typ) -> "for (" ^ getListType typ ^ " " ^ j_expr e1 ^ ": " ^ j_expr e2 ^ ") {\n" ^ j_stmt s ^"}"
 
 and writeIf (elif_l:(s_expr * s_stmt) list) (else_stmt: s_stmt) = (match elif_l with
 					[] -> ""
@@ -94,8 +101,16 @@ and writeBinOp e1 o e2 = j_expr e1 ^
 and j_stmt = function
 	S_Block(syms,ss) -> "{\n" ^ String.concat "\n" ( List.rev (List.map j_stmt ss)) ^ "\n}"	
 | 	S_Expr(e,t) -> j_expr e ^ ";"
-|   S_Return(e,t) -> "return " ^ j_expr e
+|   S_Return(e,t) -> "return " ^ j_expr e ^";"
 | 	S_If(elif_l, s) -> writeIf elif_l s 
 | 	S_For(e1, e2, s) -> writeForLoop e1 e2 s
 | 	S_While(e, s) -> writeWhileLoop e s
 | 	S_VarDecl(v) -> writeVarDecl v
+
+and j_fdecl (f: s_func_decl) = "public static " ^ j_obj_data_type f.ret_type ^ " " ^ f.fname ^
+							   "(" ^ String.concat "," (List.map writeFormal f.formals) ^") {\n" ^
+							   String.concat "\n" (List.map j_stmt f.body) ^ "}"
+	
+and writeFormal (v: s_var_decl) = match v with
+	S_BasicDecl(d, e) -> j_data_type d ^ " " ^ j_expr e
+|   S_ListDecl(d, e) -> "ArrayList<" ^ j_obj_data_type d ^ "> " ^ j_expr e

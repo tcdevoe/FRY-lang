@@ -152,6 +152,13 @@ fdecl:
     		formals = $4;
     		body = List.rev $7;
     	}}
+| 	type_spec LIST ID LPAREN param_list RPAREN LBRACE stmt_list RBRACE
+    	{{ 
+    		fname = $3;
+    		ret_type = List($1);
+    		formals = $5;
+    		body = List.rev $8;
+    	}}
 
 param_list:
 	/* nothing */ { [] }
@@ -164,7 +171,7 @@ stmt:
 |	RETURN expr SEMI { Return($2) }
 |	LBRACE stmt_list RBRACE	{ Block(List.rev $2) }
 |	conditional_stmt		{ $1 }
-|	FOR expr FROM expr stmt { For($2, $4, $5) }
+|	FOR LPAREN expr FROM expr RPAREN stmt { For($3, $5, $7) }
 |	WHILE expr stmt { While($2, $3) }
 |	vdecl 		  { VarDecl($1) }
 

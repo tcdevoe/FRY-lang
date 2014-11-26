@@ -2,8 +2,6 @@
 Tests for loop with list 
 #/
 
-int List l_int = [1,2,3,4];
-
-for (i <- l_int) {
+for (i <- [1,2,3,4]) {
     Write(stdout, i);
 }
