@@ -11,7 +11,8 @@ type s_expr =
 |   S_Binop of s_expr * op * s_expr
 |   S_Postop of s_expr * post
 |   S_Preop of pre * s_expr
-|   S_Ref of s_expr * ref * s_expr * s_expr (* ID of object * reference type * index1 * index2 *)
+|   S_Ref of s_expr * ref * s_expr * dataType (* ID of object * reference type * index1 * index2 *)
+|   S_Slice of s_expr * s_expr
 |   S_Assign of string * s_expr
 |   S_Call of string * s_expr list
 |   S_SetBuild of s_expr * string * s_expr * s_expr (* [ return-layout | ID <- element-of; expression ] *)

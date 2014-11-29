@@ -49,9 +49,13 @@ and j_expr = function
 | 	S_Postop(e1, o) -> j_expr e1 ^ 
 	(match o with Inc -> "++" | Dec -> "--" )
 | 	S_Preop(o,e1) -> "!" ^ j_expr e1
-(*| 	 Ref(e1, r, e2, e3) -> "Reference (" ^ expr_s e1 ^ ") " ^
-	(match r with ListRef -> "ListRef" | LayRef -> "LayRef") ^ 
-	" (" ^ expr_s e2 ^ ") " ^ " (" ^ expr_s e3 ^ ") " *)
+|   S_Slice(e1, e2) -> if e1 = S_Noexpr then
+					   	"0,"^ j_expr e2
+					   else if e2 = S_Noexpr then
+					  	j_expr e1
+					   else
+					   	j_expr e1 ^ "," ^ j_expr e2
+| 	S_Ref(e1, r, e2, typ) -> writeListRef e1 r e2 typ
 | 	S_Assign(v, e) ->  v ^ " = " ^ j_expr e
 |   S_Call(f, es) -> (match f with 
 	| "Write" -> "IOUtils.Write" ^ "(" ^
@@ -97,6 +101,14 @@ and writeBinOp e1 o e2 = j_expr e1 ^
 				  Geq -> ">=" (* |  In -> "In" | Notin -> "Notin" | From -> "From" *)
 				  | And -> "&&" | Or -> "||" ) ^ j_expr e2
 
+and writeListRef e1 r e2 typ = match e2 with
+					 	S_Slice(es1, es2) ->"new ArrayList<"  ^ j_obj_data_type typ ^ ">(" ^ 
+					 						 j_expr e1 ^ ".subList(" ^ 
+					 						(match es2 with 
+					 						  S_Noexpr -> j_expr e2 ^ ", " ^ j_expr e1 ^ ".size()"
+					 						| _ -> j_expr e2 )
+					 						^ "))"
+					|   _ -> j_expr e1 ^".get(" ^ j_expr e2 ^")"
 
 and j_stmt = function
 	S_Block(syms,ss) -> "{\n" ^ String.concat "\n" ( List.rev (List.map j_stmt ss)) ^ "\n}"	

@@ -1,0 +1,23 @@
+str List l_str = ["TEST0", "TEST1", "TEST2", "TEST3" ];
+str List l_str2 = l_str[1:3];
+str List l_str3 = l_str[:2];
+str List l_str4 = l_str[1:];
+
+Write(stdout, "List 1:");
+for (i <- l_str){
+        Write(stdout, i);
+}
+ Write(stdout, "List 2:");
+for (i <- l_str2){
+        Write(stdout, i);
+}
+
+Write(stdout, "List 3:");
+for (i <- l_str3){
+        Write(stdout, i);
+}
+
+Write(stdout, "List 4:");
+for (i <- l_str4){
+    Write(stdout, i);
+}

@@ -54,8 +54,8 @@ postfix_expr:
 	set_build_expr { $1 }
 |   postfix_expr INC        { Postop($1, Inc) }
 |   postfix_expr DEC        { Postop($1, Dec) }
-|   postfix_expr LBRACK expr slice_opt RBRACK { Ref($1, ListRef, $3, $4) }
-|   postfix_expr PERIOD LBRACE expr slice_opt RBRACE { Ref($1, LayRef, $4, $5) }
+|   postfix_expr LBRACK slice_opt RBRACK { Ref($1, ListRef, $3) }
+|   postfix_expr PERIOD LBRACE slice_opt RBRACE { Ref($1, LayRef, $4) }
 
 
 prefix_expr:
@@ -193,8 +193,9 @@ expr_opt:
 |   expr          { $1 }
 
 slice_opt:
-    /* nothing */ { Noexpr }
-|   COLON expr    { $2 }
+|   expr_opt COLON expr    { Slice($1, $3) }
+|	expr 	COLON expr_opt { Slice($1, $3) }
+|	expr 				   { $1 }
 
 actuals_opt:
     /* nothing */ { [] }

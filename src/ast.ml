@@ -16,9 +16,10 @@ type expr =
 |   Binop of expr * op * expr
 |   Postop of expr * post
 |   Preop of pre * expr
-|   Ref of expr * ref * expr * expr (* ID of object * reference type * index1 * index2 *)
+|   Ref of expr * ref * expr (* ID of object * reference type * index1 * index2 *)
 |   Assign of string * expr
 |   Call of string * expr list
+| 	Slice of expr * expr
 |   SetBuild of expr * string * expr * expr (* [ return-layout | ID <- element-of; expression ] *)
 |   Noexpr
 
@@ -66,9 +67,10 @@ let rec expr_s = function
 | Postop(e1, o) -> "Postop (" ^ expr_s e1 ^ ") " ^
 	(match o with Inc -> "Inc" | Dec -> "Dec" )
 | Preop(o,e1) -> "Not (" ^ expr_s e1 ^ ") "
-| Ref(e1, r, e2, e3) -> "Reference (" ^ expr_s e1 ^ ") " ^
+| Slice(e1,e2) -> "Slice (" ^ expr_s e1 ^","^expr_s e2 ^")"
+| Ref(e1, r, e2) -> "Reference (" ^ expr_s e1 ^ ") " ^
 	(match r with ListRef -> "ListRef" | LayRef -> "LayRef") ^ 
-	" (" ^ expr_s e2 ^ ") " ^ " (" ^ expr_s e3 ^ ") "
+	" (" ^ expr_s e2 ^ ") "
 | Assign(v, e) -> "Assign " ^ v ^ " (" ^ expr_s e ^ ") "
 | Call(f, es) -> "Call " ^ f ^ " [" ^
 		String.concat ", " (List.map (fun e -> "(" ^ expr_s e ^ ")") es) ^ "]"
@@ -114,6 +116,6 @@ String.concat "\n" (List.map stmt_s f.body) ^
 "]}\n"
 
 (* stmt list is built backwards, need to reverse *)
-let program_s prog = "([" ^  String.concat ",\n" ((List.map stmt_s prog.stmts)) ^ "],\n" ^ 
+let program_s prog = "([" ^  String.concat ",\n" (List.rev (List.map stmt_s prog.stmts)) ^ "],\n" ^ 
 					  "[" ^ String.concat ",\n" (List.map func_decl_s prog.funcs) ^"])"
 

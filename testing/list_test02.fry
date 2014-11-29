@@ -1,0 +1,6 @@
+str List l_str = ["TEST0", "TEST1", "TEST2", "TEST3" ];
+Write(stdout,l_str[0]);
+Write(stdout,l_str[1]);
+Write(stdout,l_str[2]);
+Write(stdout,l_str[3]);
+

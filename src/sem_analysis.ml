@@ -87,7 +87,8 @@ match e with
 | 	Binop(e1, o, e2) -> get_Binop_return e1 o e2 env	 
 | 	Postop(e1, o) -> get_Postop_return e1 o env
 | 	Preop(o,e1) -> get_Preop_return e1 o env
-(* | 	Ref(e1, r, e2, e3) ->  NEED TO ADD LIST/LAYOUT References*)
+|   Slice(e1, e2) -> check_slice e1 e2 env 
+| 	Ref(e1, r, e2) -> get_ref_return e1 r e2 env 
 | 	Assign(v, e) -> check_assign v e env
 | 	Call(f, es) -> let sexpr_l = List.map (fun e -> let ex_l = check_expr e env in fst ex_l) es in
 				   let (fname, ret_type) = find_func env.funcs f in
@@ -166,6 +167,25 @@ and check_list_lit (l: expr list) (env: translation_environment)  =
 						raise (Error("Elements of a list literal must all be of the same type"))) l 
 	in S_ListLit(s_l, t), t
 
+and get_ref_return (e1: expr) (r: ref) (e2: expr) (env: translation_environment) =
+	let (e1,typ1) = check_expr e1 env 
+	and (e2, typ2) = check_expr e2 env in
+	match typ1 with 
+	List(t) -> if typ2 = Int then
+					S_Ref(e1,r,e2,t), Void
+			   else
+					raise (Error("Reference index must be integer valued"))		
+|   _ -> raise (Error("Must reference a type List or Layout"))
+
+and check_slice (e1: expr) (e2: expr) (env: translation_environment) = 
+	let (e1, typ1) = check_expr e1 env 
+	and (e2, typ2) = check_expr e2 env in
+	if typ1 = Int && typ2 = Int then
+		S_Slice(e1,e2), Int
+	else if e1 = S_Noexpr || e2 = S_Noexpr then
+		S_Slice(e1,e2), Int
+	else
+		raise (Error("Slice indexes must be integers"))
 
 let rec check_stmt (s: Ast.stmt) (env: translation_environment) = match s with
   Block(ss) ->	let scope' = { parent = Some(env.scope); variables = [] } in 
