@@ -28,6 +28,7 @@ type symbol_table = {
 type s_var_decl = 
 	S_BasicDecl of dataType * s_expr
 |   S_ListDecl of dataType * s_expr
+|   S_LayoutDecl of dataType * s_expr 
 
 type s_stmt =
     S_Block of symbol_table * s_stmt list

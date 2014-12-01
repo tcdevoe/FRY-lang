@@ -113,8 +113,16 @@ list_initializer_list:
 	func_call 	{ [$1] }
 |	list_initializer_list COMMA func_call { $3::$1 } 
 
+layout_lit:
+	list_initializer 				{ $1 }
+|	LAYOUT ID LBRACE layout_lit_list RBRACE	{ LayoutLit(Layout($2), $4) }
+
+layout_lit_list:
+	layout_lit	{ [$1] }
+|	layout_lit_list COMMA layout_lit { $3::$1 }
+
 expr:
-	list_initializer	{ $1 }
+	layout_lit	{ $1 }
 
 
 
@@ -127,7 +135,6 @@ type_spec:
 |	INT 			{ Int }
 |	FLOAT 			{ Float }
 | 	BOOL 			{ Bool }
-|	LAYOUT			{ Layout }
 | 	TABLE 			{ Table }
 
 declarator:
@@ -135,8 +142,25 @@ declarator:
 |	ID ASSIGN expr  { Assign($1, $3) }
 
 vdecl:
-    type_spec declarator SEMI { BasicDecl($1, $2) }
-|	type_spec LIST declarator SEMI { ListDecl($1, $3) }
+    type_spec declarator  { VarDecl($1, $2) }
+|   type_spec LIST declarator { VarDecl(List($1), $3)}
+    /* For Layouts */ 
+|   LAYOUT ID declarator   { VarDecl(Layout($2), $3) }
+
+
+
+layout_creation:
+	LAYOUT ID ASSIGN LBRACE layout_creation_list RBRACE { LayoutCreation($2, $5) }
+
+layout_creation_list:
+	layout_type_spec {[$1]}
+|	layout_creation_list COMMA layout_type_spec { $3::$1 }
+
+layout_type_spec: 
+	type_spec COLON ID { VarDecl($1,Id($3)) }
+|	type_spec LIST COLON ID { VarDecl(List($1),Id($4)) }
+| 	LAYOUT ID COLON ID { VarDecl(Layout($2), Id($4)) }
+
 
 program:
     /* nothing */ { { stmts = []; funcs = [] } }
@@ -162,10 +186,10 @@ fdecl:
 
 param_list:
 	/* nothing */ { [] }
-|	param_list COMMA type_spec ID { BasicDecl($3, Id($4))::$1}
-|	param_list COMMA type_spec LIST ID { ListDecl($3, Id($5))::$1 }
+|	param_list COMMA type_spec ID { VarDecl($3, Id($4))::$1}
+|	param_list COMMA type_spec LIST ID { VarDecl(List($3), Id($5))::$1 }
+|	param_list COMMA LAYOUT ID ID { VarDecl(Layout($4), Id($5))::$1 }
 
-/* TODO: Add in jump-statements (break/continue) */
 stmt:
 	expr SEMI { Expr($1) }
 |	RETURN expr SEMI { Return($2) }
@@ -173,7 +197,8 @@ stmt:
 |	conditional_stmt		{ $1 }
 |	FOR LPAREN expr FROM expr RPAREN stmt { For($3, $5, $7) }
 |	WHILE expr stmt { While($2, $3) }
-|	vdecl 		  { VarDecl($1) }
+|	vdecl SEMI	  { VarDeclS($1) }
+|	layout_creation SEMI { $1 }
 
 conditional_stmt:
 	IF LPAREN expr RPAREN stmt elif_list %prec NOELSE { If(($3,$5)::$6, Block([])) }

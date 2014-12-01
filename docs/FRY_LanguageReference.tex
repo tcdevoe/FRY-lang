@@ -410,9 +410,9 @@ An instance of an already created layout is created using similar syntax to the 
 \begin{tabbing}
 	\= \emph{Layout}\=\emph{-instance-creation} : \\
 		\> \> \texttt{Layout} \emph{identifier} \emph{identifier} \\
-		\>\> \texttt{Layout} \emph{identifier} \emph{identifier} \texttt{= \{} \emph{Layout-instance-list} \texttt{\}}
+		\>\> \texttt{Layout} \emph{identifier} \emph{identifier} \texttt{= Layout} \emph{identifier} \texttt{\{} \emph{Layout-instance-list} \texttt{\}}
 \end{tabbing}
-The first identifier is the identifier of the Layout you are creating an instance of and the second is the identifier of this layout instance. 
+The first identifier is the identifier of the Layout you are creating an instance of and the second is the identifier of this layout instance. The identifier on the right side of the assignment specifies what type of Layout is contained in the \emph{Layout-instance-list}.
 \begin{tabbing}
 	\= \emph{Layout}\=\emph{-instance-list} : \\
 		\> \> \emph{constant-or-identifier} \\
@@ -423,15 +423,15 @@ The types of each element in the \emph{Layout-instance-list} must match the type
 Some examples of Layout declaration and creation are
 
 \begin{lstlisting}
-Layout date = { int: mon, int: day, int: year \
-		Print:mon+"-"+day+"-"+year }
-Layout date today = {10, 23, 2014}
-Write(stdout, today)
+Layout date = { int: mon, int: day, int: year 
+		Print:mon+"-"+day+"-"+year };
+Layout date today = Layout date{10, 23, 2014};
+Write(stdout, today.mon + "-" + today.day + "-" + today.year);
 # 10-23-2014
-Layout date nextweek = { today.mon, today.day+7, \
-				today.year}
-Layout userinfo = {str: Fname, str: Lname, \		
-			Layout date:bday}
+Layout date nextweek = Layout date{today.mon, 
+today.day+7, today.year};
+Layout userinfo = {str: Fname, str: Lname, 	
+			Layout date:bday};
 \end{lstlisting}
 In this example, date is defined as a Layout with three integer fields, for month, day, and year, and has a \emph{Print-specifier} defined. An instance of the date Layout is created with value 10-23-2014 and written to stdout using the \emph{Write} function. \emph{Write} is a built-in function which takes two arguments, an output (stdout,stderr, or string name of a file) and the object to be written. The date Layout instance \texttt{nextweek} is computed from today's date. The \texttt{userinfo} layout is created with the date Layout nested inside of it. 
 

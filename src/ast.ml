@@ -1,6 +1,6 @@
 (* Ref is List/Layout element reference *)
 type op = Add | Sub | Mult | Div | Equal | Neq | Less | Leq | Greater | Geq | In | Notin | And | Or | From
-type dataType  = String | Float | Bool | Int | Layout | Table | List of dataType | Void | Res
+type dataType  = String | Float | Bool | Int | Layout of string | Table | List of dataType | Void | Res
 type post = Inc | Dec 
 type pre = Not
 type ref = ListRef | LayRef
@@ -20,12 +20,11 @@ type expr =
 |   Assign of string * expr
 |   Call of string * expr list
 | 	Slice of expr * expr
+|   LayoutLit of dataType * expr list
 |   SetBuild of expr * string * expr * expr (* [ return-layout | ID <- element-of; expression ] *)
 |   Noexpr
 
-type var_decl = 
-	BasicDecl of dataType * expr
-|   ListDecl of dataType * expr
+and var_decl = VarDecl of dataType * expr
 
 type stmt =
     Block of stmt list
@@ -34,7 +33,9 @@ type stmt =
 |   If of (expr * stmt) list * stmt
 |   For of expr * expr * stmt (* needs to be a X in Y binop expr *)
 |   While of expr * stmt
-| 	VarDecl of var_decl 
+| 	VarDeclS of var_decl 
+|   LayoutCreation of string * var_decl list 
+
 
 
 type func_decl = {
@@ -82,15 +83,13 @@ let rec data_type_s = function
 | Float -> "Float" 
 | Bool -> "Bool" 
 | Int -> "Int"  
-| Layout -> "Layout" 
+| Layout(name) -> "Layout " ^ name
 | Table -> "Table"
 | List(t) ->  data_type_s t ^ " List"
 
 
 let var_decl_s = function 
-	BasicDecl(d,e) -> "BasicDecl (" ^ data_type_s d ^ " " ^ expr_s e ^ ")"
-|   ListDecl(d,e) -> "ListDecl (" ^ data_type_s d ^ " " ^ expr_s e ^ ")"
-
+	VarDecl(d,e) -> "BasicDecl (" ^ data_type_s d ^ " " ^ expr_s e ^ ")"
 
 let rec stmt_s = function
   Block(ss) -> "Block [" ^ String.concat ",\n"
@@ -107,7 +106,7 @@ let rec stmt_s = function
 				"\n Else (" ^ stmt_s s ^ ")"				
 | For(e1, e2, s) -> "For (" ^ expr_s e1 ^ " in " ^ expr_s e2 ^ ") (" ^ stmt_s s ^ ") "
 | While(e, s) -> "While (" ^ expr_s e ^ ") (" ^ stmt_s s ^ ") "
-| VarDecl(v) -> var_decl_s v
+| VarDeclS(v) -> var_decl_s v
 
 let func_decl_s f = 
 " { fname = \"" ^ f.fname ^ "\"\n ret_type = \"" ^ data_type_s f.ret_type ^ "\"\n formals = [" ^ 

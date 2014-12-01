@@ -200,7 +200,7 @@ let rec check_stmt (s: Ast.stmt) (env: translation_environment) = match s with
 					S_If(elif_l', s_else)
 | For(e1, e2, s) -> check_for e1 e2 s env
 | While(e, s) -> check_while e s env
-| VarDecl(v) -> check_var_decl v env
+| VarDeclS(v) -> check_var_decl v env
 
 (* Need to check every expr in the elif_l is boolean valued *)
 (* Need to check stmt is valid *)
@@ -249,49 +249,73 @@ and check_while (e: expr) (s: stmt) (env: translation_environment) =
 		raise (Error("While expression must be boolean-valued"))
 
 and check_var_decl (v: var_decl) (env: translation_environment) =
-	match v with
-	BasicDecl(typ,e) -> (match e with
-								Id(x) -> let exist = List.exists (fun (_, s, _) -> s = x) env.scope.variables in
-										if exist then
-											raise (Error("Identifier already declared"))
-										else
-											S_VarDecl(S_BasicDecl(typ, S_Id(x, typ)))
-							|   Assign(x,e) ->  let exist = List.exists (fun (_, s, _) -> s = x) env.scope.variables in
-										if exist then
-											raise (Error("Identifier already declared"))
-										else
-										env.scope.variables <- (typ, x, S_Noexpr)::env.scope.variables;
-										let (e',_) = check_expr e env in
-											S_VarDecl(S_BasicDecl(typ, S_Assign(x, e')))
-							|  _ -> raise (Error ("Not a valid assignment")))
-| 	ListDecl(typ, e) -> (match e with
-								Id(x) -> let exist = List.exists (fun (_, s, _) -> s = x) env.scope.variables in
-										if exist then
-											raise (Error("Identifier already declared"))
-										else
+	match v with 
+	VarDecl(d,e) ->
+		(match d with
+		List(typ) ->  (match e with
+									Id(x) -> let exist = List.exists (fun (_, s, _) -> s = x) env.scope.variables in
+											if exist then
+												raise (Error("Identifier already declared"))
+											else
+												env.scope.variables <- (List(typ), x, S_Noexpr)::env.scope.variables;
+												S_VarDecl(S_ListDecl(List(typ), S_Id(x, typ)))
+								|   Assign(x,e) ->  let exist = List.exists (fun (_, s, _) -> s = x) env.scope.variables in
+											if exist then
+												raise (Error("Identifier already declared"))
+											else
 											env.scope.variables <- (List(typ), x, S_Noexpr)::env.scope.variables;
-											S_VarDecl(S_ListDecl(List(typ), S_Id(x, typ)))
-							|   Assign(x,e) ->  let exist = List.exists (fun (_, s, _) -> s = x) env.scope.variables in
-										if exist then
-											raise (Error("Identifier already declared"))
-										else
-										env.scope.variables <- (List(typ), x, S_Noexpr)::env.scope.variables;
- 										let (e',_) = check_expr e env in
- 											env.scope.variables <- (List(typ), x, e')::env.scope.variables;
-											S_VarDecl(S_ListDecl(typ, S_Assign(x, e')))
-							|  _ -> raise (Error ("Not a valid assignment")))
+	 										let (e',_) = check_expr e env in
+	 											env.scope.variables <- (List(typ), x, e')::env.scope.variables;
+												S_VarDecl(S_ListDecl(typ, S_Assign(x, e')))
+								|  _ -> raise (Error ("Not a valid assignment")))
+	|   Layout(name) -> (match e with
+									Id(x) -> let exist = List.exists (fun (_, s, _) -> s = x) env.scope.variables in
+											if exist then
+												raise (Error("Identifier already declared"))
+											else
+												env.scope.variables <- (Layout(name), x, S_Noexpr)::env.scope.variables;
+												S_VarDecl(S_LayoutDecl(Layout(name), S_Id(x, Layout(name))))
+								|   Assign(x,e) ->  let exist = List.exists (fun (_, s, _) -> s = x) env.scope.variables in
+											if exist then
+												raise (Error("Identifier already declared"))
+											else
+											env.scope.variables <- (Layout(name), x, S_Noexpr)::env.scope.variables;
+	 										let (e',_) = check_expr e env in
+	 											env.scope.variables <- (Layout(name), x, e')::env.scope.variables;
+												S_VarDecl(S_LayoutDecl(Layout(name), S_Assign(x, e')))
+								|  _ -> raise (Error ("Not a valid assignment")))
+	|   _ -> (match e with
+									Id(x) -> let exist = List.exists (fun (_, s, _) -> s = x) env.scope.variables in
+											if exist then
+												raise (Error("Identifier already declared"))
+											else
+												S_VarDecl(S_BasicDecl(d, S_Id(x, d)))
+								|   Assign(x,e) ->  let exist = List.exists (fun (_, s, _) -> s = x) env.scope.variables in
+											if exist then
+												raise (Error("Identifier already declared"))
+											else
+											env.scope.variables <- (d, x, S_Noexpr)::env.scope.variables;
+											let (e',_) = check_expr e env in
+												S_VarDecl(S_BasicDecl(d, S_Assign(x, e')))
+								|  _ -> raise (Error ("Not a valid assignment"))))
 
 let check_formals (decl: var_decl) (env: translation_environment) =
-	match decl with
-	BasicDecl(typ,e) -> (match e with
-								Id(x) -> env.scope.variables <- (typ, x, S_Noexpr)::env.scope.variables;
-										 S_BasicDecl(typ, S_Id(x, typ))
-							|   _ -> raise (Error("Function formals must be identifiers"))
-						)
-|   ListDecl(typ, e) -> (match e with
+	match decl with 
+	VarDecl(d,e) -> 
+	( 	match d with
+		List(typ) -> (match e with
 								Id(x) -> env.scope.variables <- (typ, x, S_Noexpr)::env.scope.variables;
 										 S_ListDecl(typ, S_Id(x, typ))
 							|   _ -> raise (Error("Function formals must be identifiers")))
+	|	Layout(name) -> (match e with
+								Id(x) -> env.scope.variables <- (Layout(name), x, S_Noexpr)::env.scope.variables;
+										 S_LayoutDecl(Layout(name), S_Id(x, Layout(name)))
+							|   _ -> raise (Error("Function formals must be identifiers"))
+						)
+	|  _ -> (match e with
+								Id(x) -> env.scope.variables <- (d, x, S_Noexpr)::env.scope.variables;
+										 S_BasicDecl(d, S_Id(x, d))
+							|   _ -> raise (Error("Function formals must be identifiers"))))
 
 let check_fdecl (func: Ast.func_decl) (env: translation_environment) : (s_func_decl) = 
 	if env.in_func then
