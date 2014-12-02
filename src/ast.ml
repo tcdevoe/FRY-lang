@@ -75,21 +75,22 @@ let rec expr_s = function
 | Assign(v, e) -> "Assign " ^ v ^ " (" ^ expr_s e ^ ") "
 | Call(f, es) -> "Call " ^ f ^ " [" ^
 		String.concat ", " (List.map (fun e -> "(" ^ expr_s e ^ ")") es) ^ "]"
+| LayoutLit(typ, e_list) -> "LayoutLit " ^ data_type_s typ ^ " [" ^ String.concat "," (List.map (fun e -> expr_s e) e_list)
 | SetBuild(e1, id, e2, e3) -> "SetBuild (" ^ expr_s e1 ^ ") " ^ id ^ " from (" ^ expr_s e2 ^ ") (" ^ expr_s e3 ^ ") "
 | Noexpr -> "Noexpr"
 
-let rec data_type_s = function
+and data_type_s = function
   String -> "String"
 | Float -> "Float" 
 | Bool -> "Bool" 
 | Int -> "Int"  
-| Layout(name) -> "Layout " ^ name
+| Layout(name) -> "Layout(" ^ name ^")"
 | Table -> "Table"
 | List(t) ->  data_type_s t ^ " List"
 
 
 let var_decl_s = function 
-	VarDecl(d,e) -> "BasicDecl (" ^ data_type_s d ^ " " ^ expr_s e ^ ")"
+	VarDecl(d,e) -> "VarDecl (" ^ data_type_s d ^ " " ^ expr_s e ^ ")"
 
 let rec stmt_s = function
   Block(ss) -> "Block [" ^ String.concat ",\n"
@@ -107,6 +108,8 @@ let rec stmt_s = function
 | For(e1, e2, s) -> "For (" ^ expr_s e1 ^ " in " ^ expr_s e2 ^ ") (" ^ stmt_s s ^ ") "
 | While(e, s) -> "While (" ^ expr_s e ^ ") (" ^ stmt_s s ^ ") "
 | VarDeclS(v) -> var_decl_s v
+| LayoutCreation(name, v_list) -> "Layout " ^ name ^ "[" ^ String.concat "," (List.map (fun v -> var_decl_s v) v_list) ^ "]\n"
+
 
 let func_decl_s f = 
 " { fname = \"" ^ f.fname ^ "\"\n ret_type = \"" ^ data_type_s f.ret_type ^ "\"\n formals = [" ^ 

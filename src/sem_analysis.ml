@@ -21,6 +21,14 @@ let rec find_variable (scope: symbol_table) name =
 		Some(parent) -> find_variable parent name
 		| _ -> raise (Error("Unrecognized identifier " ^ name))
 
+let rec find_layout (scope: symbol_table) name = 
+	try
+		List.find (fun (s, _) -> s = name ) scope.layouts
+	with Not_found ->
+		match scope.parent with
+		Some(parent) -> find_layout parent name
+		| _ -> raise (Error("Unrecognized layout type " ^ name))
+
 let rec find_func (funcs: s_func_decl list) fname = 
 	try 
 		let func = List.find (fun fn -> fn.fname = fname ) funcs in
@@ -93,6 +101,7 @@ match e with
 | 	Call(f, es) -> let sexpr_l = List.map (fun e -> let ex_l = check_expr e env in fst ex_l) es in
 				   let (fname, ret_type) = find_func env.funcs f in
 				   S_Call(fname, sexpr_l), ret_type
+|   LayoutLit(typ, e_list) -> check_layout_lit typ e_list env
 (* | 	SetBuild(e1, id, e2, e3) -> "SetBuild (" ^ expr_s e1 ^ ") " ^ id ^ " from (" ^ expr_s e2 ^ ") (" ^ expr_s e3 ^ ") " *)
 | 	Noexpr -> S_Noexpr, Void
 
@@ -187,8 +196,32 @@ and check_slice (e1: expr) (e2: expr) (env: translation_environment) =
 	else
 		raise (Error("Slice indexes must be integers"))
 
+and check_layout_lit (typ: dataType) (e_list: expr list) (env: translation_environment) = 
+	(* Need to check whether every expr in e_list has the same type as the corresponding types in typ *)
+	match typ with
+		Layout(name) -> let (_,lay_var) = find_layout env.scope name in
+						let lay_d_list = List.map (fun e' -> match e' with 
+															S_BasicDecl(t, _) -> t
+															|   S_ListDecl(t, _) -> t 
+															|   S_LayoutDecl(t, _) -> t) lay_var in
+						let lit_list = List.map (fun e' -> check_expr e' env) e_list in
+						let lit_e_list = List.map (fun e' -> let (e,_) = e' in e) lit_list in
+						let lit_d_list = List.map (fun e' -> let (_,t) = e' in t) lit_list in
+						let correct = compare_lists lay_d_list lit_d_list in
+						if correct then
+							S_LayoutLit(Layout(name), lit_e_list), Layout(name)
+						else
+							raise (Error("Layout instance is not the correct format"))
+	|   _ -> raise (Error("Can only create a layout instance of a layout type"))
+
+and compare_lists l1 l2 = match l1, l2 with
+| [], [] -> true
+| [], _
+| _, [] -> false
+| x::xs, y::ys -> x = y && compare_lists xs ys
+
 let rec check_stmt (s: Ast.stmt) (env: translation_environment) = match s with
-  Block(ss) ->	let scope' = { parent = Some(env.scope); variables = [] } in 
+  Block(ss) ->	let scope' = { parent = Some(env.scope); variables = []; layouts = env.scope.layouts } in 
   				let env' = { env with scope = scope'} in
   				let ss = List.map (fun s -> check_stmt s env') ss in
   				scope'.variables <- List.rev scope'.variables;
@@ -201,6 +234,33 @@ let rec check_stmt (s: Ast.stmt) (env: translation_environment) = match s with
 | For(e1, e2, s) -> check_for e1 e2 s env
 | While(e, s) -> check_while e s env
 | VarDeclS(v) -> check_var_decl v env
+| LayoutCreation(name, v_list) ->  check_layout_creation name v_list env
+
+and check_layout_creation (name: string) (v_list: var_decl list) (env: translation_environment) =
+	(* Need to check whether this layout is already defined *)
+	let exist = List.exists (fun (s, _) -> s = name) env.scope.layouts in
+	if exist then
+		raise (Error("Layout " ^ name ^ " already defined."))
+	else
+		(* Then need to check that every expr in the var_decl list is an ID expr *)
+		let s_v_list = List.map ( fun v' -> 
+			let scope' = {env.scope with variables = []} in
+	        let env' = {env with scope = scope' } in
+			let v' = check_var_decl v' env' in
+			let e = (match v' with 
+			S_VarDecl(v) -> (match v with
+				S_BasicDecl(_, e) -> e
+			|   S_ListDecl(_, e) ->  e
+			|   S_LayoutDecl(_, e) -> e)) in
+			match e with
+				S_Id(x, typ) -> (match typ with
+					Layout(name) -> S_LayoutDecl(Layout(name), e)
+				|	List(typ) -> S_ListDecl(List(typ), e)
+				|   _ -> S_BasicDecl(typ, e))
+			|	_ -> raise (Error("Layout creation statement must only contain datatype identifier pairs"))) v_list in
+		env.scope.layouts <- (name, s_v_list)::env.scope.layouts;
+		(* Layouts created are kept track of in the symbol table *)
+		S_Expr(S_Noexpr, Void)
 
 (* Need to check every expr in the elif_l is boolean valued *)
 (* Need to check stmt is valid *)
@@ -321,7 +381,7 @@ let check_fdecl (func: Ast.func_decl) (env: translation_environment) : (s_func_d
 	if env.in_func then
 		raise (Error ("Cannot nest function declarations"))
 	else
-		let env' = { funcs = env.funcs; scope = {parent = Some(env.scope); variables = env.scope.variables}; 
+		let env' = { funcs = env.funcs; scope = {parent = Some(env.scope); variables = env.scope.variables; layouts=[]}; 
 		return_type = func.ret_type; in_func = true} in 
 		let f = { Sast.fname = func.fname; Sast.ret_type = func.ret_type; Sast.formals = (List.map (fun x -> check_formals x env') func.formals); Sast.body = (List.map (fun x -> check_stmt x env') func.body );} in
 		env.funcs <- f::env.funcs; f
@@ -349,10 +409,10 @@ let init_env : (translation_environment) =
 				  	formals = [S_BasicDecl(String, S_Id("o_file", String))];
 				  	body = [S_Expr(S_Noexpr, Void)]; }; ] in
 	let scope_i = { parent = None; 
-				   	variables = [(String, "stdout", S_Noexpr); (String, "stderr", S_Noexpr)]} in 
+				   	variables = [(String, "stdout", S_Noexpr); (String, "stderr", S_Noexpr)]; layouts=[]} in 
 	{ funcs = func_i ; scope = scope_i; return_type = Void; in_func = false } 			   	
 
 let check_prgm (prog: Ast.program ) : (Sast.s_program) = 
 	let env = init_env in
-	{ Sast.stmts = (List.map (fun x -> check_stmt x env) (List.rev prog.stmts) );  Sast.funcs = (List.map (fun x -> check_fdecl x env) prog.funcs) } 
+	{ Sast.stmts = (List.map (fun x -> check_stmt x env) (List.rev prog.stmts) );  Sast.funcs = (List.map (fun x -> check_fdecl x env) prog.funcs); Sast.syms = env.scope} 
 

@@ -15,17 +15,19 @@ type s_expr =
 |   S_Slice of s_expr * s_expr
 |   S_Assign of string * s_expr
 |   S_Call of string * s_expr list
+|   S_LayoutLit of dataType * s_expr list
 |   S_SetBuild of s_expr * string * s_expr * s_expr (* [ return-layout | ID <- element-of; expression ] *)
 |   S_Noexpr
 
 type symbol_table = {
 	(* Parent symbol table included so variables are included in child scope *)
 	parent: symbol_table option;
-	(* May need to add more to this to keep track of array vars *)
 	mutable variables: (dataType * string * s_expr) list;
+	(* Tracks the layout name and its constituent values *)
+	mutable layouts: (string * s_var_decl list) list;
 }
 
-type s_var_decl = 
+and s_var_decl = 
 	S_BasicDecl of dataType * s_expr
 |   S_ListDecl of dataType * s_expr
 |   S_LayoutDecl of dataType * s_expr 
@@ -38,6 +40,7 @@ type s_stmt =
 |   S_For of s_expr * s_expr * s_stmt 
 |   S_While of s_expr * s_stmt
 | 	S_VarDecl of s_var_decl 
+
 
 type s_func_decl = {
     fname : string;
@@ -54,5 +57,5 @@ type translation_environment = {
 }
 
 
-type s_program = { stmts: s_stmt list; funcs: s_func_decl list }
+type s_program = { stmts: s_stmt list; funcs: s_func_decl list; syms: symbol_table }
 

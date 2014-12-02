@@ -1,6 +1,5 @@
 open Sast
 open Ast
-(* Update javagen to take SAST args *)
 
 let rec j_prgm (prog: Sast.s_program) = 
 	"import fry.IOUtils;\n" ^
@@ -8,6 +7,9 @@ let rec j_prgm (prog: Sast.s_program) =
 	"import java.util.ArrayList;\n" ^
 	"import java.util.Arrays;\n" ^ 
 	"public class test{\n" ^
+	(* Write Layouts as private classes *)
+	String.concat "\n" (List.map j_layout prog.syms.layouts) ^ 
+	(* Write function declarations *)
 	String.concat "\n" (List.map j_fdecl prog.funcs) ^
 	"\n\npublic static void main(String[] args){\n" ^
 		String.concat "\n" (List.map j_stmt prog.stmts) ^
@@ -19,8 +21,7 @@ and j_data_type = function
 |	Float	-> "float"
 | 	Bool 	-> "boolean"	
 (* Need to add in java libs to handle Layout/Table *)
-(*|	Layout  ->	"Layout"
-| 	Table	->  "Table" *) 
+ 
 
 and j_obj_data_type (typ: dataType)  = match typ with
 	String 	-> "String"
@@ -28,7 +29,8 @@ and j_obj_data_type (typ: dataType)  = match typ with
 |   Float -> "Float"
 |   Bool -> "Boolean"
 |   List(t) ->  "ArrayList<" ^ j_obj_data_type t ^ ">"
-
+|	Layout(name)  -> name
+(* |  Table ->  *)
 and getListType = function
 	List(t) -> j_obj_data_type t
 
@@ -57,6 +59,7 @@ and j_expr = function
 					   	j_expr e1 ^ "," ^ j_expr e2
 | 	S_Ref(e1, r, e2, typ) -> writeListRef e1 r e2 typ
 | 	S_Assign(v, e) ->  v ^ " = " ^ j_expr e
+|   S_LayoutLit(d,t) -> "new " ^ j_obj_data_type d ^ " (" ^ String.concat "," (List.rev (List.map j_expr t)) ^ ")"
 |   S_Call(f, es) -> (match f with 
 	| "Write" -> "IOUtils.Write" ^ "(" ^
 		String.concat ", " (List.map elemForIO es) ^ ")"		
@@ -93,6 +96,7 @@ and writeWhileLoop (e: s_expr) (s: s_stmt) =
 and writeVarDecl = function
 	S_BasicDecl(d, e) -> j_data_type d ^ " " ^ j_expr e ^ ";"
 |   S_ListDecl(d, e) -> "ArrayList<" ^ j_obj_data_type d ^ "> " ^ j_expr e ^ ";"
+|   S_LayoutDecl(d, e) -> j_obj_data_type d ^ " " ^ j_expr e ^ ";"
 
 and writeBinOp e1 o e2 = j_expr e1 ^ 
 		(match o with Add -> "+" | Sub -> "-" | Mult -> "*" |
@@ -126,3 +130,18 @@ and j_fdecl (f: s_func_decl) = "public static " ^ j_obj_data_type f.ret_type ^ "
 and writeFormal (v: s_var_decl) = match v with
 	S_BasicDecl(d, e) -> j_data_type d ^ " " ^ j_expr e
 |   S_ListDecl(d, e) -> "ArrayList<" ^ j_obj_data_type d ^ "> " ^ j_expr e
+|   S_LayoutDecl(d, e) -> j_obj_data_type d ^ " " ^ j_expr e 
+
+and j_layout (layout: string * s_var_decl list) = 
+	let (name, v_decs) = layout in
+	"private static class " ^ name ^ " {\n" ^ String.concat "\n" (List.rev (List.map writeVarDecl v_decs)) ^
+	j_layout_constructor v_decs name ^
+	"}"
+
+and j_layout_constructor (v_decs: s_var_decl list) (name: string) = 
+"\npublic " ^ name ^ "(" ^ String.concat "," (List.rev (List.map writeFormal v_decs)) ^ ")" ^ 
+"{\n" ^ String.concat ";\n" (List.map (fun v_dec -> let v_name = (match v_dec with 	
+	S_BasicDecl(d, e) 
+|   S_ListDecl(d, e) 
+|   S_LayoutDecl(d, e) -> j_expr e) in "this." ^ v_name ^ "=" ^ v_name) v_decs) ^
+";\n }\n"
