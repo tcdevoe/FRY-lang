@@ -60,6 +60,11 @@ public class IOUtils {
 		o.flush();
 	}
 
+	public static void Write(String outputSpec, Object obj){
+		Write(outputSpec, obj.toString());
+	}
+
+
 	public static void Read(String inputSpec, String text) throws IOException{
 
 		BufferedReader i = null;

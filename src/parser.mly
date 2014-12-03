@@ -137,17 +137,17 @@ type_spec:
 | 	BOOL 			{ Bool }
 | 	TABLE 			{ Table }
 
+full_type:
+	type_spec 			{ $1 }
+|	type_spec LIST 		{ List($1) }
+|   LAYOUT ID 			{ Layout($2) }
+	
 declarator:
 	ID 		{ Id($1) }
 |	ID ASSIGN expr  { Assign($1, $3) }
 
 vdecl:
-    type_spec declarator  { VarDecl($1, $2) }
-|   type_spec LIST declarator { VarDecl(List($1), $3)}
-    /* For Layouts */ 
-|   LAYOUT ID declarator   { VarDecl(Layout($2), $3) }
-
-
+    full_type declarator  { VarDecl($1, $2) }
 
 layout_creation:
 	LAYOUT ID ASSIGN LBRACE layout_creation_list RBRACE { LayoutCreation($2, $5) }
@@ -157,10 +157,7 @@ layout_creation_list:
 |	layout_creation_list COMMA layout_type_spec { $3::$1 }
 
 layout_type_spec: 
-	type_spec COLON ID { VarDecl($1,Id($3)) }
-|	type_spec LIST COLON ID { VarDecl(List($1),Id($4)) }
-| 	LAYOUT ID COLON ID { VarDecl(Layout($2), Id($4)) }
-
+	full_type COLON ID { VarDecl($1,Id($3)) }
 
 program:
     /* nothing */ { { stmts = []; funcs = [] } }
@@ -169,26 +166,18 @@ program:
 |	program stmt  { { stmts = $2::$1.stmts; funcs = $1.funcs } }
 
 fdecl:
-    type_spec ID LPAREN param_list RPAREN LBRACE stmt_list RBRACE
+    full_type ID LPAREN param_list RPAREN LBRACE stmt_list RBRACE
     	{{ 
     		fname = $2;
     		ret_type = $1;
     		formals = $4;
     		body = List.rev $7;
     	}}
-| 	type_spec LIST ID LPAREN param_list RPAREN LBRACE stmt_list RBRACE
-    	{{ 
-    		fname = $3;
-    		ret_type = List($1);
-    		formals = $5;
-    		body = List.rev $8;
-    	}}
 
 param_list:
 	/* nothing */ { [] }
-|	param_list COMMA type_spec ID { VarDecl($3, Id($4))::$1}
-|	param_list COMMA type_spec LIST ID { VarDecl(List($3), Id($5))::$1 }
-|	param_list COMMA LAYOUT ID ID { VarDecl(Layout($4), Id($5))::$1 }
+|	full_type ID	{ [VarDecl($1, Id($2))] }
+|	param_list COMMA full_type ID { VarDecl($3, Id($4))::$1}
 
 stmt:
 	expr SEMI { Expr($1) }

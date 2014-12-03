@@ -57,7 +57,9 @@ and j_expr = function
 					  	j_expr e1
 					   else
 					   	j_expr e1 ^ "," ^ j_expr e2
-| 	S_Ref(e1, r, e2, typ) -> writeListRef e1 r e2 typ
+| 	S_Ref(e1, r, e2, typ) -> (match r with 
+								ListRef -> writeListRef e1 r e2 typ
+							| 	LayRef -> writeLayRef e1 r e2 typ)
 | 	S_Assign(v, e) ->  v ^ " = " ^ j_expr e
 |   S_LayoutLit(d,t) -> "new " ^ j_obj_data_type d ^ " (" ^ String.concat "," (List.rev (List.map j_expr t)) ^ ")"
 |   S_Call(f, es) -> (match f with 
@@ -94,7 +96,7 @@ and writeWhileLoop (e: s_expr) (s: s_stmt) =
 	"\n}"
 
 and writeVarDecl = function
-	S_BasicDecl(d, e) -> j_data_type d ^ " " ^ j_expr e ^ ";"
+	S_BasicDecl(d, e) -> j_obj_data_type d ^ " " ^ j_expr e ^ ";"
 |   S_ListDecl(d, e) -> "ArrayList<" ^ j_obj_data_type d ^ "> " ^ j_expr e ^ ";"
 |   S_LayoutDecl(d, e) -> j_obj_data_type d ^ " " ^ j_expr e ^ ";"
 
@@ -114,6 +116,8 @@ and writeListRef e1 r e2 typ = match e2 with
 					 						^ "))"
 					|   _ -> j_expr e1 ^".get(" ^ j_expr e2 ^")"
 
+and writeLayRef e1 r e2 typ = j_expr e1 ^ "." ^ j_expr e2
+
 and j_stmt = function
 	S_Block(syms,ss) -> "{\n" ^ String.concat "\n" ( List.rev (List.map j_stmt ss)) ^ "\n}"	
 | 	S_Expr(e,t) -> j_expr e ^ ";"
@@ -128,7 +132,7 @@ and j_fdecl (f: s_func_decl) = "public static " ^ j_obj_data_type f.ret_type ^ "
 							   String.concat "\n" (List.map j_stmt f.body) ^ "}"
 	
 and writeFormal (v: s_var_decl) = match v with
-	S_BasicDecl(d, e) -> j_data_type d ^ " " ^ j_expr e
+	S_BasicDecl(d, e) -> j_obj_data_type d ^ " " ^ j_expr e
 |   S_ListDecl(d, e) -> "ArrayList<" ^ j_obj_data_type d ^ "> " ^ j_expr e
 |   S_LayoutDecl(d, e) -> j_obj_data_type d ^ " " ^ j_expr e 
 
@@ -136,6 +140,7 @@ and j_layout (layout: string * s_var_decl list) =
 	let (name, v_decs) = layout in
 	"private static class " ^ name ^ " {\n" ^ String.concat "\n" (List.rev (List.map writeVarDecl v_decs)) ^
 	j_layout_constructor v_decs name ^
+	j_toString v_decs ^ 
 	"}"
 
 and j_layout_constructor (v_decs: s_var_decl list) (name: string) = 
@@ -145,3 +150,11 @@ and j_layout_constructor (v_decs: s_var_decl list) (name: string) =
 |   S_ListDecl(d, e) 
 |   S_LayoutDecl(d, e) -> j_expr e) in "this." ^ v_name ^ "=" ^ v_name) v_decs) ^
 ";\n }\n"
+
+and j_toString (v_decs: s_var_decl list) =
+"\npublic String toString(){\nreturn " ^ 
+String.concat "+\"|\"+" (List.rev (List.map (fun v_dec -> let vname = (match v_dec with 	
+	S_BasicDecl(d, e) 
+|   S_ListDecl(d, e) 
+|   S_LayoutDecl(d, e) -> j_expr e) in vname ^".toString()") v_decs))
+^ ";\n}"

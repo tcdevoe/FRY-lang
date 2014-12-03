@@ -1,0 +1,27 @@
+/# 
+
+    Basic layout tests
+
+#/
+
+Layout flt = { int: int_part, int: frac_part };
+
+Layout flt addFlt(Layout flt flt1, Layout flt flt2){
+    int int_part = flt1.{int_part}+flt2.{int_part};
+    int frac_part = flt1.{frac_part}+flt2.{frac_part};
+    int diff;
+    if (frac_part > 100){
+        diff = frac_part - 100;
+        frac_part = diff;
+        int_part = int_part + 1;
+    }
+
+    ret Layout flt {int_part, frac_part};
+}
+
+Layout flt flt1 = Layout flt {4,76};
+Layout flt flt2 = Layout flt {5,32};
+Layout flt flt3 = addFlt(flt1,flt2);
+
+
+Write(stdout, flt3);

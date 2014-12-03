@@ -10,4 +10,4 @@ Layout date today = Layout date {10, 23, 2014};
 Layout user = { Layout date: bday, str: fname, str: lname };
 Layout user tom = Layout user {Layout date {9, 19, 1991}, "Tom", "DeVoe"};
 
-Write(stdout, today);
+Write(stdout, tom);

@@ -177,14 +177,44 @@ and check_list_lit (l: expr list) (env: translation_environment)  =
 	in S_ListLit(s_l, t), t
 
 and get_ref_return (e1: expr) (r: ref) (e2: expr) (env: translation_environment) =
-	let (e1,typ1) = check_expr e1 env 
-	and (e2, typ2) = check_expr e2 env in
+	let (e1,typ1) = check_expr e1 env in
 	match typ1 with 
-	List(t) -> if typ2 = Int then
-					S_Ref(e1,r,e2,t), Void
-			   else
-					raise (Error("Reference index must be integer valued"))		
+	List(t) -> 	get_list_ref_return e1 r e2 env t
+|   Layout(name) -> get_layout_ref_return e1 r e2 env name
 |   _ -> raise (Error("Must reference a type List or Layout"))
+
+and get_list_ref_return (e1: s_expr) (r: ref) (e2: expr) (env: translation_environment) (t: dataType) =
+	let (e2, typ2) = check_expr e2 env in
+	if typ2 = Int then
+		S_Ref(e1,r,e2,t), t
+   else
+		raise (Error("List reference index must be integer valued"))	
+
+and get_layout_ref_return (e1: s_expr) (r: ref) (e2: expr) (env: translation_environment) (name: string) =
+	let (_, mems) = find_layout env.scope name in 
+	(* Need to add layout members to temporary scope *)
+	let env' = env in 
+	List.iter (fun v_dec -> add_layout_mems v_dec env') mems; 
+	let (e2, typ2) = check_expr e2 env' in
+	match e2 with
+	(* Can be either a member name, or a numeric value *)
+	S_Id(x, _) -> S_Ref(e1, r, e2, typ2), typ2
+|   _ -> if typ2 = Int then
+			S_Ref(e1, r, e2, typ2), typ2
+		 else
+		 	raise (Error("Layout reference must either be an element name or an index"))
+
+and add_layout_mems (v: s_var_decl) (env: translation_environment) =
+	match v with
+		S_ListDecl(d,e) ->  (match e with
+									S_Id(x,_) -> env.scope.variables <- (d, x, S_Noexpr)::env.scope.variables;
+								|  _ -> raise (Error ("Should not be reachable")))
+	|   S_LayoutDecl(d,e) -> (match e with
+									S_Id(x,_) -> env.scope.variables <- (d, x, S_Noexpr)::env.scope.variables;
+								|  _ -> raise (Error ("Should not be reachable")))
+	|   S_BasicDecl(d,e) -> (match e with
+									S_Id(x,_) -> env.scope.variables <- (d, x, S_Noexpr)::env.scope.variables;
+								|  _ -> raise (Error ("Should not be reachable")))
 
 and check_slice (e1: expr) (e2: expr) (env: translation_environment) = 
 	let (e1, typ1) = check_expr e1 env 
@@ -349,6 +379,7 @@ and check_var_decl (v: var_decl) (env: translation_environment) =
 											if exist then
 												raise (Error("Identifier already declared"))
 											else
+												env.scope.variables <- (d, x, S_Noexpr)::env.scope.variables;
 												S_VarDecl(S_BasicDecl(d, S_Id(x, d)))
 								|   Assign(x,e) ->  let exist = List.exists (fun (_, s, _) -> s = x) env.scope.variables in
 											if exist then
@@ -381,9 +412,10 @@ let check_fdecl (func: Ast.func_decl) (env: translation_environment) : (s_func_d
 	if env.in_func then
 		raise (Error ("Cannot nest function declarations"))
 	else
-		let env' = { funcs = env.funcs; scope = {parent = Some(env.scope); variables = env.scope.variables; layouts=[]}; 
+		let env' = { funcs = env.funcs; scope = {parent = Some(env.scope); variables = []; layouts=env.scope.layouts}; 
 		return_type = func.ret_type; in_func = true} in 
-		let f = { Sast.fname = func.fname; Sast.ret_type = func.ret_type; Sast.formals = (List.map (fun x -> check_formals x env') func.formals); Sast.body = (List.map (fun x -> check_stmt x env') func.body );} in
+		let formals = (List.rev (List.map (fun x -> check_formals x env') func.formals)) in
+		let f = { Sast.fname = func.fname; Sast.ret_type = func.ret_type; Sast.formals = formals; Sast.body = (List.map (fun x -> check_stmt x env') func.body );} in
 		env.funcs <- f::env.funcs; f
 
 (* Need to initialize reserved keywords and built-in funcs *)
