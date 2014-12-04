@@ -64,7 +64,6 @@ public class IOUtils {
 		Write(outputSpec, obj.toString());
 	}
 
-
 	public static void Read(String inputSpec, String text) throws IOException{
 
 		BufferedReader i = null;

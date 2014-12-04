@@ -1,4 +1,4 @@
-OBJS = ast.cmo sem_analysis.cmo javagen.cmo parser.cmo scanner.cmo fry.cmo
+OBJS = ast.cmo SemanticAnalysis.cmo javagen.cmo parser.cmo scanner.cmo fry.cmo
 
 fry : $(OBJS) java_make
 	ocamlc -g -o fry $(OBJS)
@@ -34,13 +34,14 @@ ast.cmo :
 ast.cmx :
 fry.cmo : scanner.cmo parser.cmi javagen.cmo ast.cmo
 fry.cmx : scanner.cmx parser.cmx javagen.cmx ast.cmx
-javagen.cmo : ast.cmo
-javagen.cmx : ast.cmx
+javagen.cmo : sast.cmi ast.cmo
+javagen.cmx : sast.cmi ast.cmx
 parser.cmo : ast.cmo parser.cmi
 parser.cmx : ast.cmx parser.cmi
 scanner.cmo : parser.cmi
 scanner.cmx : parser.cmx
-sem_analysis.cmo : sast.cmi ast.cmo
-sem_analysis.cmx : sast.cmi ast.cmx
+SemanticAnalysis.cmo : sast.cmi ast.cmo
+SemanticAnalysis.cmx : sast.cmi ast.cmx
 parser.cmi : ast.cmo
 sast.cmi : ast.cmo
+

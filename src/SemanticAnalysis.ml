@@ -10,7 +10,8 @@ open Ast
 open Sast
 exception Error of string
 
-let print_sym_tbl (syms: symbol_table) = let str = "SYMBOL TABLE: \n[ " ^ String.concat "\n" (List.map (fun (typ, name, _) -> "[" ^ Ast.data_type_s typ ^ " " ^ name ^ "]") syms.variables) ^ "]" 
+let print_sym_tbl (syms: symbol_table) = let str = "SYMBOL TABLE: \n[ Variables :" ^ String.concat "\n" (List.map (fun (typ, name, _) -> "[" ^ Ast.data_type_s typ ^ " " ^ name ^ "]") syms.variables) ^ "\n" ^
+																	" Layouts :" ^ String.concat "\n" (List.map (fun (name,_) -> "[ Layout " ^ name ^ "]") syms.layouts) ^ "]" 
 											in print_endline str
 
 let rec find_variable (scope: symbol_table) name = 
@@ -31,9 +32,10 @@ let rec find_layout (scope: symbol_table) name =
 
 let rec find_func (funcs: s_func_decl list) fname = 
 	try 
-		let func = List.find (fun fn -> fn.fname = fname ) funcs in
-		func.fname, func.ret_type
-	with Not_found -> raise (Error("Unrecgonized Function call " ^ fname))
+	(* Return all functions with that name, for overloading *)
+		let funcs' = List.filter (fun fn -> fn.fname = fname ) funcs in
+			funcs'
+	with Not_found -> raise (Error("Unrecognized Function call " ^ fname))
 
 let get_math_binop (t1: dataType) (t2: dataType) (env: translation_environment) = 
 	match (t1, t2) with
@@ -98,9 +100,7 @@ match e with
 |   Slice(e1, e2) -> check_slice e1 e2 env 
 | 	Ref(e1, r, e2) -> get_ref_return e1 r e2 env 
 | 	Assign(v, e) -> check_assign v e env
-| 	Call(f, es) -> let sexpr_l = List.map (fun e -> let ex_l = check_expr e env in fst ex_l) es in
-				   let (fname, ret_type) = find_func env.funcs f in
-				   S_Call(fname, sexpr_l), ret_type
+| 	Call(f, es) -> check_call f es env
 |   LayoutLit(typ, e_list) -> check_layout_lit typ e_list env
 (* | 	SetBuild(e1, id, e2, e3) -> "SetBuild (" ^ expr_s e1 ^ ") " ^ id ^ " from (" ^ expr_s e2 ^ ") (" ^ expr_s e3 ^ ") " *)
 | 	Noexpr -> S_Noexpr, Void
@@ -176,6 +176,36 @@ and check_list_lit (l: expr list) (env: translation_environment)  =
 						raise (Error("Elements of a list literal must all be of the same type"))) l 
 	in S_ListLit(s_l, t), t
 
+and check_call (f: string) (es: expr list) (env: translation_environment) = 
+	let sexpr_l_typ = List.map (fun e -> check_expr e env) es in
+	let ret_funcs = find_func env.funcs f in
+	let (sexpr_l, fdec) = find_func_signature f sexpr_l_typ ret_funcs in 
+		S_Call(f, sexpr_l), fdec.ret_type
+
+and find_func_signature (f: string) (opts: (s_expr * dataType) list) (ret_funcs: s_func_decl list) =
+	(* Check function opts *)
+	try 
+		match ret_funcs with 
+						[] -> raise (Error("Argument is not the correct type for function "^f))
+					|	hd::tl -> let forms = hd.formals in 
+									let sexpr = List.map2 (fun (opt: s_expr * dataType) (form: s_var_decl) -> 
+									let opt_typ = snd opt in
+									let form_typ = (match form with
+														S_BasicDecl(d,_)
+													|   S_ListDecl(d,_)
+													|   S_LayoutDecl(d,_) -> d) in
+									if opt_typ = form_typ then
+										fst opt
+									else
+										S_Noexpr) opts forms in 
+									let matched = List.exists (fun e -> e = S_Noexpr) sexpr in
+									if matched then
+										find_func_signature f opts tl
+									else
+										sexpr , hd
+	with Invalid_argument(x) ->
+		raise (Error("Incorrect number of arguments in call to function "^f))
+
 and get_ref_return (e1: expr) (r: ref) (e2: expr) (env: translation_environment) =
 	let (e1,typ1) = check_expr e1 env in
 	match typ1 with 
@@ -193,8 +223,8 @@ and get_list_ref_return (e1: s_expr) (r: ref) (e2: expr) (env: translation_envir
 and get_layout_ref_return (e1: s_expr) (r: ref) (e2: expr) (env: translation_environment) (name: string) =
 	let (_, mems) = find_layout env.scope name in 
 	(* Need to add layout members to temporary scope *)
-	let env' = env in 
-	List.iter (fun v_dec -> add_layout_mems v_dec env') mems; 
+	let env' = { env with scope = {env.scope with variables = []}} in 
+	List.iter (fun v_dec -> add_layout_mems v_dec env') mems;  
 	let (e2, typ2) = check_expr e2 env' in
 	match e2 with
 	(* Can be either a member name, or a numeric value *)
@@ -253,7 +283,7 @@ and compare_lists l1 l2 = match l1, l2 with
 let rec check_stmt (s: Ast.stmt) (env: translation_environment) = match s with
   Block(ss) ->	let scope' = { parent = Some(env.scope); variables = []; layouts = env.scope.layouts } in 
   				let env' = { env with scope = scope'} in
-  				let ss = List.map (fun s -> check_stmt s env') ss in
+  				let ss = List.map (fun s -> check_stmt s env') (List.rev ss) in
   				scope'.variables <- List.rev scope'.variables;
   				S_Block(scope', ss)
 | Expr(e) -> let (e,t) = check_expr e env in S_Expr(e,t)
@@ -289,6 +319,10 @@ and check_layout_creation (name: string) (v_list: var_decl list) (env: translati
 				|   _ -> S_BasicDecl(typ, e))
 			|	_ -> raise (Error("Layout creation statement must only contain datatype identifier pairs"))) v_list in
 		env.scope.layouts <- (name, s_v_list)::env.scope.layouts;
+		env.funcs <- { fname = "Write"; 
+					ret_type = Void; 
+					formals = [S_BasicDecl(String, S_Id("o_file", String)); S_LayoutDecl(Layout(name), S_Id("output_str", Layout(name)))];
+					body = [S_Expr(S_Noexpr, Void)];}::env.funcs;
 		(* Layouts created are kept track of in the symbol table *)
 		S_Expr(S_Noexpr, Void)
 
@@ -318,7 +352,10 @@ and check_for (e1: expr) (e2: expr) (s: stmt) (env: translation_environment) =
 		     let env' = { env with scope = scope'} in
 			 let (e1, t1) = check_expr e1 env' in
 			 let (e2, t2) = check_expr e2 env' in
-				 env'.scope.variables <- (t2, x, S_Noexpr)::env.scope.variables;
+			 	let t1 = (match t2 with
+						 	List(typ) -> typ
+						| 	_	-> t2) in
+				 env'.scope.variables <- (t1, x, S_Noexpr)::env.scope.variables;
 				 match e2 with
 				  S_Id(name, typ) -> let (typ,_,exp) = find_variable env'.scope name in
 				 	(match typ with 
@@ -412,7 +449,7 @@ let check_fdecl (func: Ast.func_decl) (env: translation_environment) : (s_func_d
 	if env.in_func then
 		raise (Error ("Cannot nest function declarations"))
 	else
-		let env' = { funcs = env.funcs; scope = {parent = Some(env.scope); variables = []; layouts=env.scope.layouts}; 
+		let env' = { funcs = env.funcs; scope = {parent = Some(env.scope); variables = [(String, "stdout", S_Noexpr); (String, "stderr", S_Noexpr)]; layouts=env.scope.layouts}; 
 		return_type = func.ret_type; in_func = true} in 
 		let formals = (List.rev (List.map (fun x -> check_formals x env') func.formals)) in
 		let f = { Sast.fname = func.fname; Sast.ret_type = func.ret_type; Sast.formals = formals; Sast.body = (List.map (fun x -> check_stmt x env') func.body );} in
@@ -446,5 +483,9 @@ let init_env : (translation_environment) =
 
 let check_prgm (prog: Ast.program ) : (Sast.s_program) = 
 	let env = init_env in
-	{ Sast.stmts = (List.map (fun x -> check_stmt x env) (List.rev prog.stmts) );  Sast.funcs = (List.map (fun x -> check_fdecl x env) prog.funcs); Sast.syms = env.scope} 
+	let layout_stmts = List.filter (fun stmt -> match stmt with LayoutCreation(_,_) -> true | _ -> false) prog.stmts in
+	let rest_stmts = List.filter (fun stmt -> match stmt with LayoutCreation(_,_) -> false | _ -> true) prog.stmts in
+	let layout_stmts = List.map (fun x -> check_stmt x env) (List.rev layout_stmts) in
+	let env = {env with scope = {env.scope with variables = [(String, "stdout", S_Noexpr); (String, "stderr", S_Noexpr)]}} in
+	{ Sast.stmts = layout_stmts@(List.map (fun x -> check_stmt x env) (List.rev rest_stmts) );  Sast.funcs = (List.map (fun x -> check_fdecl x env) prog.funcs); Sast.syms = env.scope} 
 

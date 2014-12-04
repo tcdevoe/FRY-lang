@@ -418,7 +418,16 @@ The first identifier is the identifier of the Layout you are creating an instanc
 		\> \> \emph{constant-or-identifier} \\
 		\>\> \emph{Layout-instance-list}\texttt{,} \emph{constant-or-identifier}
 \end{tabbing}
-The types of each element in the \emph{Layout-instance-list} must match the types of the members of the Layout type. Each member of the Layout instance declared is assigned the value of the \emph{constant-or-identifier} at that member's position. A mismatch between the member type and the constant or identifier type is considered an error.
+The types of each element in the \emph{Layout-instance-list} must match the types of the members of the Layout type. Each member of the Layout instance declared is assigned the value of the \emph{constant-or-identifier} at that member's position. A mismatch between the member type and the constant or identifier type is considered an error. 
+
+Layout creations have a few special rules: 
+\begin{itemize}
+
+\item Layout delcarations are treated as special statements in that they are evaluated out of order versus other statements. For example, you can create layouts at the end of your program, and reference that layout type as though it were created in the beginning. However, if that layout declarations have order respective to each other.
+
+\item Layouts are only allowed to be declared on the top level of scoping.
+
+\end{itemize}
 
 Some examples of Layout declaration and creation are
 
@@ -465,7 +474,7 @@ The first example illustrates creating a Table from a file using the built-in \e
 Function declarations are created along with their definition and have the following format:
 \begin{tabbing}
 	\= \emph{Function}\=\emph{-declarations} : \\
-		\> \> \emph{type-specifier\textsubscript{opt} identifier}\texttt{(} \emph{parameter-list\textsubscript{opt}} \texttt{) 
+		\> \> \emph{type-specifier identifier}\texttt{(} \emph{parameter-list\textsubscript{opt}} \texttt{) 
 \{ } \emph{function-definition} \texttt{\}}
 \end{tabbing}
 
@@ -479,7 +488,7 @@ Then there is a \emph{parameter-list}, i.e. a list of arguments, inside of paren
 \end{tabbing}
 These arguments must be passed with the function whenever it is called.
 
-After the arguments comes the function definition inside of curly braces. The definition can contain any number statements, expressions, and declarations. The one caveat is the definition must contain a \emph{ret} statement for the return type indicated. If no type-specifier is included, then there is no return type and there should be no \emph{ret} statement.
+After the arguments comes the function definition inside of curly braces. The definition can contain any number statements, expressions, and declarations. The one caveat is the definition must contain a \emph{ret} statement for the return type indicated. If the function does not need to return a value, it is a best practice to return an int as the error code. You can \textbf{overload} functions, meaning you can have multiple functions with the same name, so long as they have different signatures.
 
 \section{Statements}
 % Expression Statements, Flow Control, Iteration Stmt (for, while)

@@ -1,0 +1,15 @@
+/#
+
+    func_test04.fry
+
+    This tests creating a function which takes multiple arguments
+
+#/
+
+int printProd(int x, int y){
+    Write(stdout, x*y);
+    ret 0;
+}
+
+printProd(5,8);
+printProd(50,42);
