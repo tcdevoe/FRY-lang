@@ -2,8 +2,7 @@ open Sast
 open Ast
 
 let rec j_prgm (prog: Sast.s_program) = 
-	"import fry.IOUtils;\n" ^
-	"import fry.FRYListFactory;\n" ^
+	"import fry.*;" ^
 	"import java.util.ArrayList;\n" ^
 	"import java.util.Arrays;\n" ^ 
 	"public class test{\n" ^
@@ -15,7 +14,7 @@ let rec j_prgm (prog: Sast.s_program) =
 		String.concat "\n" (List.map j_stmt prog.stmts) ^
 		"\n}\n}"
 
-and j_data_type = function
+and j_data_type = function+
 	String 	-> "String"
 |   Int		-> "int"
 |	Float	-> "float"
@@ -30,7 +29,7 @@ and j_obj_data_type (typ: dataType)  = match typ with
 |   Bool -> "Boolean"
 |   List(t) ->  "ArrayList<" ^ j_obj_data_type t ^ ">"
 |	Layout(name)  -> name
-(* |  Table ->  *)
+|   Table(lyt) ->  "FRYTable<" ^ j_obj_data_type lyt ^">"
 and getListType = function
 	List(t) -> j_obj_data_type t
 
@@ -138,7 +137,7 @@ and writeFormal (v: s_var_decl) = match v with
 
 and j_layout (layout: string * s_var_decl list) = 
 	let (name, v_decs) = layout in
-	"private static class " ^ name ^ " {\n" ^ String.concat "\n" (List.rev (List.map writeVarDecl v_decs)) ^
+	"private static class " ^ name ^ " extends FRYTable{\n" ^ String.concat "\n" (List.rev (List.map writeVarDecl v_decs)) ^
 	j_layout_constructor v_decs name ^
 	j_toString v_decs ^ 
 	"}"
@@ -149,7 +148,7 @@ and j_layout_constructor (v_decs: s_var_decl list) (name: string) =
 	S_BasicDecl(d, e) 
 |   S_ListDecl(d, e) 
 |   S_LayoutDecl(d, e) -> j_expr e) in "this." ^ v_name ^ "=" ^ v_name) v_decs) ^
-";\n }\n"
+";\n super(); }\n"
 
 and j_toString (v_decs: s_var_decl list) =
 "\npublic String toString(){\nreturn " ^ 

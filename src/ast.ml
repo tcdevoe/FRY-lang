@@ -1,6 +1,6 @@
 (* Ref is List/Layout element reference *)
 type op = Add | Sub | Mult | Div | Equal | Neq | Less | Leq | Greater | Geq | In | Notin | And | Or | From
-type dataType  = String | Float | Bool | Int | Layout of string | Table | List of dataType | Void | Res
+type dataType  = String | Float | Bool | Int | Layout of string | Table of dataType | List of dataType | Void | Res
 type post = Inc | Dec 
 type pre = Not
 type ref = ListRef | LayRef
@@ -35,7 +35,6 @@ type stmt =
 |   While of expr * stmt
 | 	VarDeclS of var_decl 
 |   LayoutCreation of string * var_decl list 
-
 
 
 type func_decl = {
@@ -85,7 +84,7 @@ and data_type_s = function
 | Bool -> "Bool" 
 | Int -> "Int"  
 | Layout(name) -> "Layout(" ^ name ^")"
-| Table -> "Table"
+| Table(typ) -> "Table (" ^ data_type_s typ ^ ")"
 | List(t) ->  data_type_s t ^ " List"
 
 

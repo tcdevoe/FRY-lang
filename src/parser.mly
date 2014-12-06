@@ -135,13 +135,14 @@ type_spec:
 |	INT 			{ Int }
 |	FLOAT 			{ Float }
 | 	BOOL 			{ Bool }
-| 	TABLE 			{ Table }
+|	TABLE			{ Table(Void) }
 
 full_type:
 	type_spec 			{ $1 }
 |	type_spec LIST 		{ List($1) }
 |   LAYOUT ID 			{ Layout($2) }
-	
+|	TABLE LPAREN full_type RPAREN { Table($3) }
+
 declarator:
 	ID 		{ Id($1) }
 |	ID ASSIGN expr  { Assign($1, $3) }

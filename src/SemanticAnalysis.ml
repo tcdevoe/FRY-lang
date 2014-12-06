@@ -131,7 +131,7 @@ and get_Binop_return (e1: expr) (o: op) (e2: expr) (env: translation_environment
 	|  Notin -> S_Binop(e1, o, e2), get_contain_binop t1 t2  env 
 	|  And -> S_Binop(e1, o, e2), get_logic_binop t1 t2  env 
 	|  Or -> S_Binop(e1, o, e2), get_logic_binop t1 t2  env 
-	| From -> S_Binop(e1, o, e2), Table (* Need to add a check here *)
+(* 	| From -> S_Binop(e1, o, e2), Table (* Need to add a check here *) *)
 
 and get_Postop_return (e: expr) (o: post) (env: translation_environment) : (Sast.s_expr * Ast.dataType)  = 
 	let (e, t) = check_expr e env in
@@ -411,6 +411,22 @@ and check_var_decl (v: var_decl) (env: translation_environment) =
 	 											env.scope.variables <- (Layout(name), x, e')::env.scope.variables;
 												S_VarDecl(S_LayoutDecl(Layout(name), S_Assign(x, e')))
 								|  _ -> raise (Error ("Not a valid assignment")))
+	| 	Table(typ) -> (match typ with 
+							Layout(_) -> (match e with
+									Id(x) -> let exist = List.exists (fun (_, s, _) -> s = x) env.scope.variables in
+											if exist then
+												raise (Error("Identifier already declared"))
+											else
+												env.scope.variables <- (d, x, S_Noexpr)::env.scope.variables;
+												S_VarDecl(S_BasicDecl(d, S_Id(x, d)))
+								|   Assign(x,e) ->  let exist = List.exists (fun (_, s, _) -> s = x) env.scope.variables in
+											if exist then
+												raise (Error("Identifier already declared"))
+											else
+											env.scope.variables <- (d, x, S_Noexpr)::env.scope.variables;
+											let (e',_) = check_expr e env in
+												S_VarDecl(S_BasicDecl(d, S_Assign(x, e'))))
+						| _ -> raise (Error("Table record layout must have type layout")))
 	|   _ -> (match e with
 									Id(x) -> let exist = List.exists (fun (_, s, _) -> s = x) env.scope.variables in
 											if exist then
@@ -475,7 +491,7 @@ let init_env : (translation_environment) =
 					body = [S_Expr(S_Noexpr, Void)];};
 				  { fname = "Read";
 				  	ret_type = Void;
-				  	formals = [S_BasicDecl(String, S_Id("o_file", String))];
+				  	formals = [S_BasicDecl(String, S_Id("in_file", String));S_BasicDecl(String, S_Id("delim", String))];
 				  	body = [S_Expr(S_Noexpr, Void)]; }; ] in
 	let scope_i = { parent = None; 
 				   	variables = [(String, "stdout", S_Noexpr); (String, "stderr", S_Noexpr)]; layouts=[]} in 

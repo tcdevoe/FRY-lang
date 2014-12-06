@@ -449,7 +449,7 @@ A Table represents a relational table of data. A Table is represented as a speci
 
 \begin{tabbing}
 	\= \emph{Table}\=\emph{-intializers} : \\
-		\> \> \texttt{Table} \emph{identifier}\texttt{(} \emph{identifier\textsubscript{opt}} \texttt{)}
+		\> \> \texttt{Table}\texttt{(} \emph{identifier\textsubscript{opt}} \texttt{)} \emph{identifier} 
 \end{tabbing}
 
 A table is initialized with the keyword \texttt{Table} followed by the table identifier and then an optional corresponding layout inside of parentheses. This Table will then have a List of each type in the corresponding layout. If the table is initialized without a corresponding layout, then the first layout instance added to this table will define the layout of its table. Since a Table is just a special type of layout, any layout operations can be performed on the table. For example, since any columns of the table are just List elements of the corresponding "Layout", they can be accessed using the Layout reference techniques explanined in \ref{sec:layoutref}. In particular, tables without a corresponding layout can be accessed using the numeric reference technique mentioned in that section.
@@ -458,7 +458,7 @@ Some Table declaration/initialization examples are:
 
 \begin{lstlisting}
 Layout date = { int: mon, int: day, int: year }
-Table date_tbl(Layout date) = \
+Table(Layout date) date_tbl = \
 	Read("/home/tdevoe/dates.txt", ",")
 \end{lstlisting}
 \begin{lstlisting}

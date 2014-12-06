@@ -5,13 +5,18 @@ JFLAGS = -g
 	javac $(JFLAGS) $*.java
 
 CLASSES = \
-	fry/IOUtils.java \
-	fry/FRYListFactory.java
+	fry/fry/FRYLayout.java \
+	fry/fry/FRYTable.java \
+	fry/fry/IOUtils.java \
+	fry/fry/FRYListFactory.java 
 
 default: classes
 
 classes: $(CLASSES:.java=.class)
 
+fry/fry/FRYTable.class : fry/fry/FRYLayout.java
+fry/fry/IOUtils.class : fry/fry/FRYTable.java
+
 clean:
-	rm fry/*.class
+	rm fry/fry/*.class
 
