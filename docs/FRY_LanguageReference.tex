@@ -458,8 +458,8 @@ Some Table declaration/initialization examples are:
 
 \begin{lstlisting}
 Layout date = { int: mon, int: day, int: year }
-Table(Layout date) date_tbl = \
-	Read("/home/tdevoe/dates.txt", ",")
+Table date_tbl = \
+	Read("/home/tdevoe/dates.txt", ",", date)
 \end{lstlisting}
 \begin{lstlisting}
 Table date_tbl2

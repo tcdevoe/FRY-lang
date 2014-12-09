@@ -1,6 +1,6 @@
 (* Ref is List/Layout element reference *)
 type op = Add | Sub | Mult | Div | Equal | Neq | Less | Leq | Greater | Geq | In | Notin | And | Or | From
-type dataType  = String | Float | Bool | Int | Layout of string | Table of dataType | List of dataType | Void | Res
+type dataType  = String | Float | Bool | Int | Layout of string | Table | List of dataType | Void | Res
 type post = Inc | Dec 
 type pre = Not
 type ref = ListRef | LayRef
@@ -21,6 +21,7 @@ type expr =
 |   Call of string * expr list
 | 	Slice of expr * expr
 |   LayoutLit of dataType * expr list
+|   TableInit of dataType 
 |   SetBuild of expr * string * expr * expr (* [ return-layout | ID <- element-of; expression ] *)
 |   Noexpr
 
@@ -74,6 +75,7 @@ let rec expr_s = function
 | Assign(v, e) -> "Assign " ^ v ^ " (" ^ expr_s e ^ ") "
 | Call(f, es) -> "Call " ^ f ^ " [" ^
 		String.concat ", " (List.map (fun e -> "(" ^ expr_s e ^ ")") es) ^ "]"
+| TableInit(dataType) -> "TableInit ("^data_type_s dataType^")"
 | LayoutLit(typ, e_list) -> "LayoutLit " ^ data_type_s typ ^ " [" ^ String.concat "," (List.map (fun e -> expr_s e) e_list)
 | SetBuild(e1, id, e2, e3) -> "SetBuild (" ^ expr_s e1 ^ ") " ^ id ^ " from (" ^ expr_s e2 ^ ") (" ^ expr_s e3 ^ ") "
 | Noexpr -> "Noexpr"
@@ -84,7 +86,7 @@ and data_type_s = function
 | Bool -> "Bool" 
 | Int -> "Int"  
 | Layout(name) -> "Layout(" ^ name ^")"
-| Table(typ) -> "Table (" ^ data_type_s typ ^ ")"
+| Table -> "Table"
 | List(t) ->  data_type_s t ^ " List"
 
 

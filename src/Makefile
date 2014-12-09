@@ -1,6 +1,6 @@
 OBJS = ast.cmo SemanticAnalysis.cmo javagen.cmo parser.cmo scanner.cmo fry.cmo
 
-fry : $(OBJS) java_make
+fry : $(OBJS)
 	ocamlc -g -o fry $(OBJS)
 
 scanner.ml : scanner.mll
@@ -15,9 +15,9 @@ parser.ml parser.mli : parser.mly
 %.cmi : %.mli
 	ocamlc -g -w A -c $<
 
-.PHONY : java_make
-java_make : 
-	$(MAKE) -C java/
+#.PHONY : java_make
+#java_make : 
+#	$(MAKE) -C java/
 
 .PHONY : clean
 clean : java_clean

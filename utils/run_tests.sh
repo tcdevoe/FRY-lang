@@ -32,7 +32,7 @@ diff_output(){
 report_error(){
         echo "************************"
         echo "ERROR IN TEST $(filename $(echo $test | sed 's/\.fry//'))"
-        echo "$1"
+        echo -e "$1"
         echo "*************************"
 }
 
@@ -42,7 +42,7 @@ check_and_report_errors(){
 
     exceptions=$(grep "exception|Exception|EXCEPTION" ${log_file})
     if [ "$(cat ${log_file} | wc -l)" -ne "0" ]; then
-        report_error "ERROR IN LOG FILE $log_file"
+        report_error "ERROR IN LOG FILE $log_file\n\n$(cat $log_file)\n"
         return 1
     fi
 
@@ -116,10 +116,11 @@ for test_src in $tests; do
     # copy over files for test
     cp -f ${test_dir}/${test}.fry $output_dir
     cp -f ${test_dir}/${test}.out $output_dir
-    
+    cp -f ${test_dir}/${test}.in $output_dir 2>/dev/null
     error=0
     # Translate to java
-    fry -c < ${output_dir}/${test}.fry > test.java 2>${log_dir}/${test}_trans.log
+    cd $output_dir
+    fry -c < ${test}.fry > test.java 2>${log_dir}/${test}_trans.log
     
     check_and_report_errors ${log_dir}/${test}_trans.log
     error=$?
@@ -130,18 +131,18 @@ for test_src in $tests; do
     javac test.java 2>${log_dir}/${test}_javac.log
     error=$(cat ${log_dir}/${test}_javac.log | wc -l)
     if [ "${error}" -ne "0" ]; then
-        report_error "JAVA COMPILE ERROR"
+        report_error "JAVA COMPILE ERROR\n\n$(cat ${log_dir}/${test}_javac.log)\n"
         continue
     fi
 
-    java test > ${output_dir}/${test}.tmp
+    java test > ${test}.tmp
     error=$?
     if [ "${error}" -ne "0" ]; then
-        report_error "JAVA RUNTIME ERROR"
+        report_error "JAVA RUNTIME ERROR\n\n$(cat ${output_dir}/${test}.tmp)\n"
         continue
     fi
 
-    diff_output ${output_dir}/${test}.out ${output_dir}/${test}.tmp
+    diff_output ${test}.out ${test}.tmp
     error=$?
     if [ "${error}" -eq "0" ]; then
         rm -f ${log_dir}/${test}_trans.log

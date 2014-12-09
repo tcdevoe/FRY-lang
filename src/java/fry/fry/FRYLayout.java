@@ -7,9 +7,26 @@ public class FRYLayout{
 
 	public Hashtable<Integer,String> layout; // Maps the value names to their position number
 	public Hashtable<Integer, String> datatype; // Maps the position value to their datatype 
+	public int numFields;
 
 	public FRYLayout(){
 		buildHashtable();
+	}
+	
+	/**
+	 * Creates an anonymous layout (no field names)
+	 * @param numFields
+	 */
+	public FRYLayout(int numFields){
+		layout = new Hashtable<Integer, String>();
+		datatype = new Hashtable<Integer, String>();
+		for (int i = 0; i < numFields; i++){
+			layout.put(i, (new Integer(i)).toString());
+		}
+	}
+	
+	public FRYLayout(Object[] record){
+		
 	}
 	
 	public void buildHashtable(){
@@ -22,17 +39,10 @@ public class FRYLayout{
 				continue;
 			}
 			layout.put(i, field.getName());
-			datatype.put(i, "Integer");
+			datatype.put(i, "String");
 			i++;
 		}
-	}
-	
-	public String toString(){
-		String out = "";
-		for (Field field : this.getClass().getDeclaredFields()){
-			out += field.toString()+"|";
-		}
-		return out;
+		numFields=i;
 	}
 	
 	public Field[] getFields(){
@@ -49,8 +59,20 @@ public class FRYLayout{
 		return fields;
 	}
 	
-	public String getIdByName(String fieldName){
-		return layout.get(fieldName);
+	public Field getField(int index) throws NoSuchFieldException, SecurityException{
+		return this.getClass().getDeclaredField(layout.get(index));
+	}
+	
+	public Integer getIdByName(String fieldName){
+		/**
+		 * This is inefficient but don't have enough time to fix things
+		 */
+		for(int i = 0; i < layout.size(); i++){
+			if(layout.get(i).equals(fieldName)){
+				return i;
+			}
+		}
+		return null;
 	}
 
 }

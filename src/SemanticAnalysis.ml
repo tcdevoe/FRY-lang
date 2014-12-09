@@ -11,7 +11,8 @@ open Sast
 exception Error of string
 
 let print_sym_tbl (syms: symbol_table) = let str = "SYMBOL TABLE: \n[ Variables :" ^ String.concat "\n" (List.map (fun (typ, name, _) -> "[" ^ Ast.data_type_s typ ^ " " ^ name ^ "]") syms.variables) ^ "\n" ^
-																	" Layouts :" ^ String.concat "\n" (List.map (fun (name,_) -> "[ Layout " ^ name ^ "]") syms.layouts) ^ "]" 
+																	" Layouts :" ^ String.concat "\n" (List.map (fun (name,_) -> "[ Layout " ^ name ^ "]") syms.layouts) ^ "]" ^
+																	" Tables :" ^ String.concat "\n" (List.map (fun (typ,name) -> "[ Table " ^ Ast.data_type_s typ ^ " " ^ name ^ "]") syms.tables) ^ "]"
 											in print_endline str
 
 let rec find_variable (scope: symbol_table) name = 
@@ -29,6 +30,16 @@ let rec find_layout (scope: symbol_table) name =
 		match scope.parent with
 		Some(parent) -> find_layout parent name
 		| _ -> raise (Error("Unrecognized layout type " ^ name))
+
+let rec find_table (scope: symbol_table) name = 
+	try
+		List.find (fun (_, s) -> s = name ) scope.tables
+	with Not_found ->
+		match scope.parent with
+		Some(parent) -> find_table parent name
+		(* Should return a "Generic Layout" if the table is not found *)
+		| _ -> raise (Error("Unrecognized table " ^ name))
+
 
 let rec find_func (funcs: s_func_decl list) fname = 
 	try 
@@ -102,7 +113,8 @@ match e with
 | 	Assign(v, e) -> check_assign v e env
 | 	Call(f, es) -> check_call f es env
 |   LayoutLit(typ, e_list) -> check_layout_lit typ e_list env
-(* | 	SetBuild(e1, id, e2, e3) -> "SetBuild (" ^ expr_s e1 ^ ") " ^ id ^ " from (" ^ expr_s e2 ^ ") (" ^ expr_s e3 ^ ") " *)
+|   TableInit(typ) -> (match typ with Layout(typ) -> S_TableInit(Layout(typ)), Table | _ -> raise (Error ("Table initializer must have layout type"))) 	
+| 	SetBuild(e1, id, e2, e3) -> check_set_build e1 id e2 e3 env
 | 	Noexpr -> S_Noexpr, Void
 
 and get_Binop_return (e1: expr) (o: op) (e2: expr) (env: translation_environment) : (Sast.s_expr * Ast.dataType) = 
@@ -131,7 +143,7 @@ and get_Binop_return (e1: expr) (o: op) (e2: expr) (env: translation_environment
 	|  Notin -> S_Binop(e1, o, e2), get_contain_binop t1 t2  env 
 	|  And -> S_Binop(e1, o, e2), get_logic_binop t1 t2  env 
 	|  Or -> S_Binop(e1, o, e2), get_logic_binop t1 t2  env 
-(* 	| From -> S_Binop(e1, o, e2), Table (* Need to add a check here *) *)
+ 	|  From -> S_Binop(e1, o, e2), Table 
 
 and get_Postop_return (e: expr) (o: post) (env: translation_environment) : (Sast.s_expr * Ast.dataType)  = 
 	let (e, t) = check_expr e env in
@@ -152,7 +164,6 @@ and get_Preop_return (e: expr) (o: pre) (env: translation_environment)  : (Sast.
 and check_assign (v: string) (e: expr) (env: translation_environment) : (Sast.s_expr * Ast.dataType) =
 	let (t1,_,_) = find_variable env.scope v
 	and (e, t2) = check_expr e env in
-
 	if t1 = t2 then 
 		S_Assign(v, e), t2
 	else
@@ -216,7 +227,7 @@ and get_ref_return (e1: expr) (r: ref) (e2: expr) (env: translation_environment)
 and get_list_ref_return (e1: s_expr) (r: ref) (e2: expr) (env: translation_environment) (t: dataType) =
 	let (e2, typ2) = check_expr e2 env in
 	if typ2 = Int then
-		S_Ref(e1,r,e2,t), t
+		S_Ref(e1,r,e2,t,env.inSetBuild), t
    else
 		raise (Error("List reference index must be integer valued"))	
 
@@ -228,9 +239,9 @@ and get_layout_ref_return (e1: s_expr) (r: ref) (e2: expr) (env: translation_env
 	let (e2, typ2) = check_expr e2 env' in
 	match e2 with
 	(* Can be either a member name, or a numeric value *)
-	S_Id(x, _) -> S_Ref(e1, r, e2, typ2), typ2
+	S_Id(x, _) -> S_Ref(e1, r, e2, typ2, env.inSetBuild), typ2
 |   _ -> if typ2 = Int then
-			S_Ref(e1, r, e2, typ2), typ2
+			S_Ref(e1, r, e2, typ2, env.inSetBuild), typ2
 		 else
 		 	raise (Error("Layout reference must either be an element name or an index"))
 
@@ -269,7 +280,7 @@ and check_layout_lit (typ: dataType) (e_list: expr list) (env: translation_envir
 						let lit_d_list = List.map (fun e' -> let (_,t) = e' in t) lit_list in
 						let correct = compare_lists lay_d_list lit_d_list in
 						if correct then
-							S_LayoutLit(Layout(name), lit_e_list), Layout(name)
+							S_LayoutLit(Layout(name), lit_e_list, env.inSetBuild), Layout(name)
 						else
 							raise (Error("Layout instance is not the correct format"))
 	|   _ -> raise (Error("Can only create a layout instance of a layout type"))
@@ -280,8 +291,27 @@ and compare_lists l1 l2 = match l1, l2 with
 | _, [] -> false
 | x::xs, y::ys -> x = y && compare_lists xs ys
 
+(* Need to check e1 is Layout type *)
+(* Need to check e2 is an ID FROM (TABLE TYPE) expression *)
+(* Need to check e3 is a boolean type expression *)
+and check_set_build e1 id e2 e3 env : (s_expr * dataType) = 
+	match e2 with Id(tbl_name) -> let (tbl_typ,_) = find_table env.scope tbl_name in
+	let env' = { env with inSetBuild = tbl_name } in  
+			env'.scope.variables <- (tbl_typ, id, S_Noexpr)::env'.scope.variables;
+	let (e1, t1) = check_expr e1 env' in
+	let (e2, t2) = check_expr e2 env' in
+	let (e3, t3) = check_expr e3 env' in
+	(match t1 with
+	Layout(name) -> 
+		if t3 = Bool then 
+			S_SetBuild(e1,id,e2,e3), Table
+		else 
+			raise (Error("Third section of set build must be boolean-valued"))
+	|   _ -> raise (Error("First section of set build must be a layout type")))
+
+
 let rec check_stmt (s: Ast.stmt) (env: translation_environment) = match s with
-  Block(ss) ->	let scope' = { parent = Some(env.scope); variables = []; layouts = env.scope.layouts } in 
+  Block(ss) ->	let scope' = { parent = Some(env.scope); variables = []; layouts = env.scope.layouts; tables = env.scope.tables; } in 
   				let env' = { env with scope = scope'} in
   				let ss = List.map (fun s -> check_stmt s env') (List.rev ss) in
   				scope'.variables <- List.rev scope'.variables;
@@ -411,22 +441,24 @@ and check_var_decl (v: var_decl) (env: translation_environment) =
 	 											env.scope.variables <- (Layout(name), x, e')::env.scope.variables;
 												S_VarDecl(S_LayoutDecl(Layout(name), S_Assign(x, e')))
 								|  _ -> raise (Error ("Not a valid assignment")))
-	| 	Table(typ) -> (match typ with 
-							Layout(_) -> (match e with
+	|   Table -> (match e with
 									Id(x) -> let exist = List.exists (fun (_, s, _) -> s = x) env.scope.variables in
 											if exist then
 												raise (Error("Identifier already declared"))
 											else
-												env.scope.variables <- (d, x, S_Noexpr)::env.scope.variables;
-												S_VarDecl(S_BasicDecl(d, S_Id(x, d)))
+												env.scope.variables <- (Table, x, S_Noexpr)::env.scope.variables;
+												S_VarDecl(S_BasicDecl(Table, S_Id(x,Table)))
 								|   Assign(x,e) ->  let exist = List.exists (fun (_, s, _) -> s = x) env.scope.variables in
 											if exist then
 												raise (Error("Identifier already declared"))
 											else
-											env.scope.variables <- (d, x, S_Noexpr)::env.scope.variables;
-											let (e',_) = check_expr e env in
-												S_VarDecl(S_BasicDecl(d, S_Assign(x, e'))))
-						| _ -> raise (Error("Table record layout must have type layout")))
+											env.scope.variables <- (Table, x, S_Noexpr)::env.scope.variables;
+	 										let (e',_) = check_expr e env in
+											(match e' with 
+												S_TableInit(typ) -> env.scope.tables <- (typ, x)::env.scope.tables 
+											| 	_ -> env.scope.variables <- (Table, x, e')::env.scope.variables);
+											S_VarDecl(S_BasicDecl(Table, S_Assign(x, e')))
+								|  _ -> raise (Error ("Not a valid assignment")))
 	|   _ -> (match e with
 									Id(x) -> let exist = List.exists (fun (_, s, _) -> s = x) env.scope.variables in
 											if exist then
@@ -465,7 +497,7 @@ let check_fdecl (func: Ast.func_decl) (env: translation_environment) : (s_func_d
 	if env.in_func then
 		raise (Error ("Cannot nest function declarations"))
 	else
-		let env' = { funcs = env.funcs; scope = {parent = Some(env.scope); variables = [(String, "stdout", S_Noexpr); (String, "stderr", S_Noexpr)]; layouts=env.scope.layouts}; 
+		let env' = { env with scope = {parent = Some(env.scope); variables = [(String, "stdout", S_Noexpr); (String, "stderr", S_Noexpr)]; layouts=env.scope.layouts; tables=env.scope.tables;}; 
 		return_type = func.ret_type; in_func = true} in 
 		let formals = (List.rev (List.map (fun x -> check_formals x env') func.formals)) in
 		let f = { Sast.fname = func.fname; Sast.ret_type = func.ret_type; Sast.formals = formals; Sast.body = (List.map (fun x -> check_stmt x env') func.body );} in
@@ -489,13 +521,17 @@ let init_env : (translation_environment) =
 					ret_type = Void; 
 					formals = [S_BasicDecl(String, S_Id("o_file", String)); S_BasicDecl(Bool, S_Id("output_str", Bool))];
 					body = [S_Expr(S_Noexpr, Void)];};
+					{ fname = "Write"; 
+					ret_type = Void; 
+					formals = [S_BasicDecl(String, S_Id("o_file", String)); S_BasicDecl(Table, S_Id("output_str", Table))];
+					body = [S_Expr(S_Noexpr, Void)];};
 				  { fname = "Read";
-				  	ret_type = Void;
+				  	ret_type = Table;
 				  	formals = [S_BasicDecl(String, S_Id("in_file", String));S_BasicDecl(String, S_Id("delim", String))];
 				  	body = [S_Expr(S_Noexpr, Void)]; }; ] in
 	let scope_i = { parent = None; 
-				   	variables = [(String, "stdout", S_Noexpr); (String, "stderr", S_Noexpr)]; layouts=[]} in 
-	{ funcs = func_i ; scope = scope_i; return_type = Void; in_func = false } 			   	
+				   	variables = [(String, "stdout", S_Noexpr); (String, "stderr", S_Noexpr)]; layouts=[]; tables=[];} in 
+	{ funcs = func_i ; scope = scope_i; return_type = Void; in_func = false; inSetBuild = "NOT"; } 			   	
 
 let check_prgm (prog: Ast.program ) : (Sast.s_program) = 
 	let env = init_env in

@@ -1,0 +1,7 @@
+/# 
+    Table test
+#/
+    Layout date = { int: mon, int: day, int: year };
+    Table date_tbl = Table (Layout date);
+    date_tbl = Read("table_test01.in",",");
+    Write(stdout, date_tbl);

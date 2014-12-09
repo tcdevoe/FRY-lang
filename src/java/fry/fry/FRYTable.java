@@ -5,12 +5,13 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.regex.Pattern;
 
 public class FRYTable {
 	public FRYLayout layout; // Maps the value names to their position number
 	public boolean isLayoutSet;
 	private int numFields; //Number of fields in a record
-	private ArrayList<Object[]> data; //data stored in table
+	private ArrayList<String[]> data; //data stored in table
 	int recIndex, numRecords;
 	
 	public FRYTable(){
@@ -19,16 +20,28 @@ public class FRYTable {
 		recIndex = 0;
 	}
 	
+	 public ArrayList<String[]> getData() {
+		return data;
+	}
+	 
+	public FRYTable(ArrayList<String[]> data, FRYLayout layout){
+		this(layout);
+		this.data = data;
+		numRecords = data.size();
+	}
+	
 	public FRYTable(FRYLayout layout){
 		this.layout = layout;
 		isLayoutSet = true;
 		recIndex = 0;
 	}
 
-	public FRYTable(BufferedReader buf, String delim) throws IOException{
+	public void readInput(InputFile i) throws IOException{
 		String line = null;
-		Object[] record = null;
-		data = new ArrayList<Object[]>();
+		String[] record = null;
+		BufferedReader buf = i.buf;
+		String delim = i.delim;
+		data = new ArrayList<String[]>();
 		numRecords = 0;
 		while ( (line = buf.readLine()) != null){
 			record = parseRecord(line, delim);
@@ -37,11 +50,13 @@ public class FRYTable {
 		}
 		numFields = record.length;
 		recIndex = 0;
-		layout = new FRYLayout();
+		if(layout == null){
+			this.layout = new FRYLayout(numFields);
+		}
 	}
 	
-	public Object[] parseRecord(String line, String delim){
-		String[] record = line.split(delim);
+	public String[] parseRecord(String line, String delim){
+		String[] record = line.split(Pattern.quote(delim));
 		return record;
 	}
 	/**
@@ -51,17 +66,17 @@ public class FRYTable {
 	 * Returns next record in the FRYTable if it exists, returns null if there are no more 
 	 * records
 	 */
-	public Object[] readRecord(){
+	public String[] readRecord(){
 		if(recIndex == numRecords){
 			return null;
 		}
-		Object[] dat = data.get(recIndex);
+		String[] dat = data.get(recIndex);
 		recIndex++;
 		return dat;
 	}
 	
 	public ArrayList<Object> getColumn(int i){
-		Object[] col = new Object[data.size()];
+		String[] col = new String[data.size()];
 		for(int j = 0; j < data.size(); j++){
 			col[j] = data.get(j)[i];
 		}
@@ -74,11 +89,11 @@ public class FRYTable {
 	
 	public void append(FRYLayout rec){
 		Field[] fields = rec.getFields();
-		Object[] record = new Object[fields.length];
+		String[] record = new String[fields.length];
 		int i = 0;
 		for (Field field : fields){
 			try {
-				record[i] = field.get(rec);
+				record[i] = (String) field.get(rec);
 			} catch (IllegalArgumentException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();

@@ -11,11 +11,12 @@ type s_expr =
 |   S_Binop of s_expr * op * s_expr
 |   S_Postop of s_expr * post
 |   S_Preop of pre * s_expr
-|   S_Ref of s_expr * ref * s_expr * dataType (* ID of object * reference type * access expression * type *)
+|   S_Ref of s_expr * ref * s_expr * dataType * string (* ID of object * reference type * access expression * type *)
 |   S_Slice of s_expr * s_expr
 |   S_Assign of string * s_expr
 |   S_Call of string * s_expr list
-|   S_LayoutLit of dataType * s_expr list
+|   S_LayoutLit of dataType * s_expr list * string
+|   S_TableInit of dataType
 |   S_SetBuild of s_expr * string * s_expr * s_expr (* [ return-layout | ID <- element-of; expression ] *)
 |   S_Noexpr
 
@@ -23,6 +24,8 @@ type symbol_table = {
 	(* Parent symbol table included so variables are included in child scope *)
 	parent: symbol_table option;
 	mutable variables: (dataType * string * s_expr) list;
+	(* Keeps track of tables' associated layouts *)
+	mutable tables: (dataType * string) list;
 	(* Tracks the layout name and its constituent values *)
 	mutable layouts: (string * s_var_decl list) list;
 }
@@ -54,6 +57,7 @@ type translation_environment = {
 	scope: symbol_table;
 	return_type: dataType;
 	in_func: bool;
+	inSetBuild: string;
 }
 
 

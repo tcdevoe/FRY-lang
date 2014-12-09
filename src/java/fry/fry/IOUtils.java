@@ -64,6 +64,7 @@ public class IOUtils {
 	// Writes to the output stream specified
 	public static void Write(String outputSpec, String text){
 		PrintWriter o = getPrintWriter(outputSpec);
+		System.out.println(text);
 		o.write(text);
 	}
 
@@ -102,10 +103,8 @@ public class IOUtils {
 		o.close();
 	}
 
-	public static FRYTable Read(String inputSpec, String delim) throws IOException{
-
+	public static InputFile Read(String inputSpec, String delim) throws IOException{
 		BufferedReader i = null;
-		String line = null;
 		// inputSpec should be stdin or string path to file
 		if ( inputSpec.equals("stdin")){
 			i = new BufferedReader( new InputStreamReader(System.in));
@@ -119,8 +118,7 @@ public class IOUtils {
 				System.exit(1);
 			}
 		}
-
-		return new FRYTable(i, delim);
+		return new InputFile(i, delim);
 	}
 
 }

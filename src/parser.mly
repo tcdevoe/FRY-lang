@@ -121,8 +121,12 @@ layout_lit_list:
 	layout_lit	{ [$1] }
 |	layout_lit_list COMMA layout_lit { $3::$1 }
 
+table_initializer:
+	layout_lit { $1 }
+|   TABLE LPAREN full_type RPAREN { TableInit($3) }
+
 expr:
-	layout_lit	{ $1 }
+	table_initializer	{ $1 }
 
 
 
@@ -135,13 +139,12 @@ type_spec:
 |	INT 			{ Int }
 |	FLOAT 			{ Float }
 | 	BOOL 			{ Bool }
-|	TABLE			{ Table(Void) }
+|	TABLE			{ Table }
 
 full_type:
 	type_spec 			{ $1 }
 |	type_spec LIST 		{ List($1) }
 |   LAYOUT ID 			{ Layout($2) }
-|	TABLE LPAREN full_type RPAREN { Table($3) }
 
 declarator:
 	ID 		{ Id($1) }

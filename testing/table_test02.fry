@@ -1,0 +1,9 @@
+/# 
+    Table test
+#/
+    Layout user = { int: id, str: fname, str: lname };
+    Table user_tbl = Table (Layout user);
+    user_tbl = Read("table_test02.in","|");
+    Layout username = { str: fname, str: lname};
+    Table test = [ Layout username {i.{fname}, i.{lname}} | i <- user_tbl; i.{id} > 4 ];
+    Write(stdout, test);
