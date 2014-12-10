@@ -15,7 +15,6 @@
 %nonassoc NOELSE
 %nonassoc ELSE
 %right ASSIGN
-%left LBRACK
 %left OR
 %left AND
 %left EQ NEQ
@@ -71,10 +70,6 @@ add_expr:
 	multi_expr { $1 }
 |   add_expr PLUS add_expr  { Binop($1, Add, $3) }
 |   add_expr MINUS add_expr { Binop($1, Sub, $3) }
-
-cont_expr:
-    add_expr IN cont_expr    { Binop($1, In, $3) }
-|   add_expr NOT IN cont_expr { Binop($1, Notin, $4) }
 
 relational_expr:
 	add_expr		{ $1 }
@@ -203,7 +198,6 @@ stmt_list:
 
 elif_list:
 	/* nothing */ { [] }
-|	ELIF LPAREN expr RPAREN stmt { [$3, $5] } /* make sure list is being created correctly */
 |	elif_list ELIF LPAREN expr RPAREN stmt { ($4, $6)::$1 }
 
 expr_opt:
@@ -211,8 +205,7 @@ expr_opt:
 |   expr          { $1 }
 
 slice_opt:
-|   expr_opt COLON expr    { Slice($1, $3) }
-|	expr 	COLON expr_opt { Slice($1, $3) }
+|   expr_opt COLON expr_opt    { Slice($1, $3) }
 |	expr 				   { $1 }
 
 actuals_opt:

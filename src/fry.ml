@@ -1,3 +1,4 @@
+open Printf
 type action = Raw | Ast | Compile
 
 let _ =
@@ -13,4 +14,6 @@ let _ =
 	 |  Compile ->
 	 			let checked_program = SemanticAnalysis.check_prgm program in 
 	 			let compiled_program = Javagen.j_prgm checked_program
-	 				in print_endline compiled_program
+	 				in let file = open_out ("fry.java") in
+   						fprintf file "%s"  compiled_program; 
+   						print_endline "Program compiled to java/fry.java"

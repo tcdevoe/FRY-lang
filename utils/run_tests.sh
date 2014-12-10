@@ -128,14 +128,14 @@ for test_src in $tests; do
         continue
     fi
 
-    javac test.java 2>${log_dir}/${test}_javac.log
+    javac fry.java 2>${log_dir}/${test}_javac.log
     error=$(cat ${log_dir}/${test}_javac.log | wc -l)
     if [ "${error}" -ne "0" ]; then
         report_error "JAVA COMPILE ERROR\n\n$(cat ${log_dir}/${test}_javac.log)\n"
         continue
     fi
 
-    java test > ${test}.tmp
+    java fry > ${test}.tmp
     error=$?
     if [ "${error}" -ne "0" ]; then
         report_error "JAVA RUNTIME ERROR\n\n$(cat ${output_dir}/${test}.tmp)\n"

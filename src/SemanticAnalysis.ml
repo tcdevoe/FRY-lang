@@ -262,6 +262,8 @@ and check_slice (e1: expr) (e2: expr) (env: translation_environment) =
 	and (e2, typ2) = check_expr e2 env in
 	if typ1 = Int && typ2 = Int then
 		S_Slice(e1,e2), Int
+	else if e1 = S_Noexpr && e2 = S_Noexpr then
+		raise (Error("Slice must have at least one valid index"))
 	else if e1 = S_Noexpr || e2 = S_Noexpr then
 		S_Slice(e1,e2), Int
 	else

@@ -6,7 +6,7 @@ let rec j_prgm (prog: Sast.s_program) =
 	"import java.util.ArrayList;\n" ^
 	"import java.util.Arrays;\n" ^ 
 	"import java.io.IOException;\n" ^
-	"public class test{\n" ^
+	"public class fry{\n" ^
 	(* Write Layouts as private classes *)
 	String.concat "\n" (List.map j_layout prog.syms.layouts) ^ 
 	(* Write function declarations *)

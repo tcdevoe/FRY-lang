@@ -1,0 +1,14 @@
+bool x = true;
+int z = 5;
+str y = "Fail";
+
+if (not x) {
+    y = "Fail";
+} 
+elif (z < 4){
+    y = "Fail";
+} 
+else {
+    y = "Success";
+}
+Write(stdout, y);
