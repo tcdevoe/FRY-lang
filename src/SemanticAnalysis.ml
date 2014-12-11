@@ -48,6 +48,8 @@ let rec find_func (funcs: s_func_decl list) fname =
 			funcs'
 	with Not_found -> raise (Error("Unrecognized Function call " ^ fname))
 
+let ret_first l = function	hd::tl -> hd 
+
 let get_math_binop (t1: dataType) (t2: dataType) (env: translation_environment) = 
 	match (t1, t2) with
 		(Int, Float) ->  Float
@@ -114,7 +116,11 @@ match e with
 | 	Call(f, es) -> check_call f es env
 |   LayoutLit(typ, e_list) -> check_layout_lit typ e_list env
 |   TableInit(typ) -> (match typ with Layout(typ) -> S_TableInit(Layout(typ)), Table | _ -> raise (Error ("Table initializer must have layout type"))) 	
-| 	SetBuild(e1, id, e2, e3) -> check_set_build e1 id e2 e3 env
+| 	SetBuild(e1, e2, e3) -> let ((e_l),e1,e3) = ( List.map (fun (id,e) -> match e with 
+																Id(tbl_name) -> let (tbl_typ,_) = find_table env.scope tbl_name in let env' = { env with inSetBuild = tbl_name } in
+													check_set_build e1 id e e3 env' tbl_typ) e2) in 
+							let (e1,_) = check_expr e1 env in let (e3,_) = check_expr e3 env in
+							S_SetBuild(e1,e_l,e3), Table
 | 	Noexpr -> S_Noexpr, Void
 
 and get_Binop_return (e1: expr) (o: op) (e2: expr) (env: translation_environment) : (Sast.s_expr * Ast.dataType) = 
@@ -296,17 +302,16 @@ and compare_lists l1 l2 = match l1, l2 with
 (* Need to check e1 is Layout type *)
 (* Need to check e2 is an ID FROM (TABLE TYPE) expression *)
 (* Need to check e3 is a boolean type expression *)
-and check_set_build e1 id e2 e3 env : (s_expr * dataType) = 
-	match e2 with Id(tbl_name) -> let (tbl_typ,_) = find_table env.scope tbl_name in
-	let env' = { env with inSetBuild = tbl_name } in  
-			env'.scope.variables <- (tbl_typ, id, S_Noexpr)::env'.scope.variables;
-	let (e1, t1) = check_expr e1 env' in
-	let (e2, t2) = check_expr e2 env' in
-	let (e3, t3) = check_expr e3 env' in
+and check_set_build e1 id e2 e3 env tbl_typ  = 
+	print_endline env.inSetBuild;
+	env.scope.variables <- (tbl_typ, id, S_Noexpr)::env.scope.variables;	
+	let (e1, t1) = check_expr e1 env in
+	let (e2, t2) = check_expr e2 env in
+	let (e3, t3) = check_expr e3 env in
 	(match t1 with
 	Layout(name) -> 
 		if t3 = Bool then 
-			S_SetBuild(e1,id,e2,e3), Table
+			(id,e2),e1,e3
 		else 
 			raise (Error("Third section of set build must be boolean-valued"))
 	|   _ -> raise (Error("First section of set build must be a layout type")))

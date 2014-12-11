@@ -22,7 +22,7 @@ type expr =
 | 	Slice of expr * expr
 |   LayoutLit of dataType * expr list
 |   TableInit of dataType 
-|   SetBuild of expr * string * expr * expr (* [ return-layout | ID <- element-of; expression ] *)
+|   SetBuild of expr * ((string * expr)  list) * expr (* [ return-layout | ID <- element-of; expression ] *)
 |   Noexpr
 
 and var_decl = VarDecl of dataType * expr
@@ -77,7 +77,7 @@ let rec expr_s = function
 		String.concat ", " (List.map (fun e -> "(" ^ expr_s e ^ ")") es) ^ "]"
 | TableInit(dataType) -> "TableInit ("^data_type_s dataType^")"
 | LayoutLit(typ, e_list) -> "LayoutLit " ^ data_type_s typ ^ " [" ^ String.concat "," (List.map (fun e -> expr_s e) e_list)
-| SetBuild(e1, id, e2, e3) -> "SetBuild (" ^ expr_s e1 ^ ") " ^ id ^ " from (" ^ expr_s e2 ^ ") (" ^ expr_s e3 ^ ") "
+| SetBuild(e1, e2, e3) -> "SetBuild (" ^ expr_s e1 ^ ") " ^ String.concat "," (List.map (fun (id,e) -> id ^ " from (" ^ expr_s e ^ ")") e2) ^ "(" ^ expr_s e3 ^ ") "
 | Noexpr -> "Noexpr"
 
 and data_type_s = function

@@ -17,7 +17,7 @@ type s_expr =
 |   S_Call of string * s_expr list
 |   S_LayoutLit of dataType * s_expr list * string
 |   S_TableInit of dataType
-|   S_SetBuild of s_expr * string * s_expr * s_expr (* [ return-layout | ID <- element-of; expression ] *)
+|   S_SetBuild of s_expr * ((string * s_expr) list) * s_expr (* [ return-layout | ID <- element-of; expression ] *)
 |   S_Noexpr
 
 type symbol_table = {

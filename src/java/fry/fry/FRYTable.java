@@ -30,6 +30,12 @@ public class FRYTable {
 		numRecords = data.size();
 	}
 	
+	public FRYTable(ArrayList<String[]> data){
+		layout = new FRYLayout(data.get(0).length);
+		this.data = data;
+		numRecords = data.size();
+	}
+	
 	public FRYTable(FRYLayout layout){
 		this.layout = layout;
 		isLayoutSet = true;

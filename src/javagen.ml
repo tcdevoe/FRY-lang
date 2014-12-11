@@ -70,7 +70,7 @@ and j_expr = function
 	| _ -> f ^ "(" ^
 		String.concat ", " (List.map (fun e -> j_expr e ) es) ^ ")")
 |   S_TableInit(typ) -> "new FRYTable( new " ^ j_obj_data_type typ ^ "() )"
-| S_SetBuild(e1, id, e2, e3) -> writeSetBuild e1 id e2 e3
+| S_SetBuild(e1, tbls, e3) -> writeSetBuild e1 tbls e3
 | S_Noexpr -> ""
 
 and writeLayoutLit d t inSetBuild =
@@ -79,7 +79,9 @@ and writeLayoutLit d t inSetBuild =
 	else
 		"new String[]{" ^ String.concat "," (List.rev (List.map j_expr t)) ^ "}"
 
-and writeSetBuild e1 id e2 e3 =  "ArrayList<String[]>  __ret_data__ = new ArrayList<String[]>("^j_expr e2^".getData().size());\nfor(String[] "^id^" : " ^ j_expr e2 ^ ".getData()){\n"^ writeSetBuildRefs e3 e2 ^"\n" ^ writeSetBuildRefs e1 e2 ^"\nif("^ j_expr e3 ^ "){ __ret_data__.add("^j_expr e1^");}\n}FRYTable __tmp_tbl__  = new FRYTable(__ret_data__,"^j_expr e2^".layout);"
+and writeSetBuild e1 tbls e3 =  let num_tbls = List.length tbls in 
+String.concat "\n" (List.map (fun (_, e2) -> "ArrayList<String[]>  __ret_data__ = new ArrayList<String[]>("^j_expr e2^".getData().size());") tbls) ^
+String.concat "\n" (List.map (fun (id, e2) -> "\nfor(String[] "^id^" : " ^ j_expr e2 ^ ".getData()){\n") tbls) ^ "\nif("^ j_expr e3 ^ "){ __ret_data__.add("^j_expr e1^");}\n}FRYTable __tmp_tbl__  = new FRYTable(__ret_data__);"
 
 
 and writeSetBuildRefs e (tbl: s_expr) = 
@@ -121,7 +123,7 @@ and writeWhileLoop (e: s_expr) (s: s_stmt) =
 and writeVarDecl = function
 	S_BasicDecl(d, e) -> (match e with S_Assign(v,e') -> 
 							(match e' with 
-							  S_SetBuild(_,_,_,_) -> j_expr e' ^"\n" ^ j_obj_data_type d ^ " " ^ v ^ " = __tmp_tbl__;"
+							  S_SetBuild(_,_,_) -> j_expr e' ^"\n" ^ j_obj_data_type d ^ " " ^ v ^ " = __tmp_tbl__;"
 							| _ -> j_obj_data_type d ^ " " ^ j_expr e ^ ";")
 						| _ -> j_obj_data_type d ^ " " ^ j_expr e ^ ";")
 |   S_ListDecl(d, e) -> "ArrayList<" ^ j_obj_data_type d ^ "> " ^ j_expr e ^ ";"

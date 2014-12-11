@@ -120,7 +120,7 @@ for test_src in $tests; do
     error=0
     # Translate to java
     cd $output_dir
-    fry -c < ${test}.fry > test.java 2>${log_dir}/${test}_trans.log
+    fry -c < ${test}.fry 2>${log_dir}/${test}_trans.log
     
     check_and_report_errors ${log_dir}/${test}_trans.log
     error=$?

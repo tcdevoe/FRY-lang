@@ -47,7 +47,11 @@ primary_expr:
 
 set_build_expr:
 	primary_expr	{ $1 }
-|	LBRACK expr BAR ID FROM set_build_expr SEMI expr RBRACK { SetBuild($2,$4,$6,$8) }
+|	LBRACK expr BAR set_build_vars SEMI expr RBRACK { SetBuild($2,$4,$6) }
+
+set_build_vars:
+	 ID FROM set_build_expr			{ [$1,$3] }
+|	set_build_vars COMMA ID FROM set_build_expr 	 { ($3,$5)::$1 }
 
 postfix_expr:
 	set_build_expr { $1 }

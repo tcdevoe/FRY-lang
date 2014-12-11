@@ -1,8 +1,12 @@
 \documentclass{article}
 \usepackage{listings}
 \usepackage{color}
+<<<<<<< Updated upstream
 \usepackage{hyperref}
 \usepackage{fixltx2e}
+=======
+\usepackage[margin=0.75in]{geometry}
+>>>>>>> Stashed changes
 
 % Default fixed font does not support bold face
 \DeclareFixedFont{\ttb}{T1}{txtt}{bx}{n}{10} % for bold
@@ -19,7 +23,7 @@ backgroundcolor=\color{codebg},
 language=Python,
 basicstyle=\ttm,
 commentstyle=\color{comment}\ttm,
-otherkeywords={Join, Sort, delim, Read, Write, ret, Layout, List, Table, true, false },             % Add keywords here
+otherkeywords={Join, Sort, delim, Read, Write, ret },             % Add keywords here
 keywordstyle=\ttb\color{deepblue},
 stringstyle=\color{deepgreen},
 frame=tb,                         % Any extra options here
@@ -36,15 +40,12 @@ breaklines=true
 \begin{document}
 \maketitle
 
-\tableofcontents
-
 \section{Introduction}
-This document serves as a reference manual for the \textbf{FRY} Programming Language. \textbf{FRY} is a language designed for processing delimited text files.
-
 
 \section{Lexical Conventions}
 % In C sections are Tokens, Comments, Identifiers, Keywords, Constants
 
+<<<<<<< Updated upstream
 \subsection{Comments}
 Single line comments are denoted by the character, \texttt{\#}. Multi-line comments are opened with \texttt{\#/} and closed with \texttt{/\#}. 
 \\
@@ -122,6 +123,9 @@ Borrowing from the \emph{The C Programming Language} by Kernigan and Ritchie, sy
 \item \texttt{Table} - a representation of a relational table. Every column in a table can be treated as a \emph{List} and every row is a record of a certain \emph{Layout}. Tables are the meat and potatoes of \textbf{FRY} and will be the focus of most programs.
 
 \end{itemize}
+=======
+\section{Meaning of Identifiers}
+>>>>>>> Stashed changes
 
 \section{Conversions}
 Certain operators can cause different basic data types to be converted between one another.
