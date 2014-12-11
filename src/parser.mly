@@ -54,7 +54,7 @@ postfix_expr:
 |   postfix_expr INC        { Postop($1, Inc) }
 |   postfix_expr DEC        { Postop($1, Dec) }
 |   postfix_expr LBRACK slice_opt RBRACK { Ref($1, ListRef, $3) }
-|   postfix_expr PERIOD LBRACE slice_opt RBRACE { Ref($1, LayRef, $4) }
+|   postfix_expr PERIOD LBRACE expr RBRACE { Ref($1, LayRef, $4) }
 
 
 prefix_expr:
@@ -113,8 +113,8 @@ layout_lit:
 |	LAYOUT ID LBRACE layout_lit_list RBRACE	{ LayoutLit(Layout($2), $4) }
 
 layout_lit_list:
-	layout_lit	{ [$1] }
-|	layout_lit_list COMMA layout_lit { $3::$1 }
+	list_initializer	{ [$1] }
+|	layout_lit_list COMMA list_initializer { $3::$1 }
 
 table_initializer:
 	layout_lit { $1 }
@@ -200,12 +200,11 @@ elif_list:
 	/* nothing */ { [] }
 |	elif_list ELIF LPAREN expr RPAREN stmt { ($4, $6)::$1 }
 
-expr_opt:
-    /* nothing */ { Noexpr }
-|   expr          { $1 }
 
 slice_opt:
-|   expr_opt COLON expr_opt    { Slice($1, $3) }
+|   COLON expr    { Slice(Noexpr, $2) }
+|	expr COLON	  { Slice($1, Noexpr) }
+|	expr COLON expr  { Slice($1, $3) }
 |	expr 				   { $1 }
 
 actuals_opt:

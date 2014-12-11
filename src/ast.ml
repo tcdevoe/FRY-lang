@@ -3,7 +3,7 @@ type op = Add | Sub | Mult | Div | Equal | Neq | Less | Leq | Greater | Geq | In
 type dataType  = String | Float | Bool | Int | Layout of string | Table | List of dataType | Void | Res
 type post = Inc | Dec 
 type pre = Not
-type ref = ListRef | LayRef
+type ref = ListRef | LayRef | TblRef
 
 type expr = 
     StringLit of string

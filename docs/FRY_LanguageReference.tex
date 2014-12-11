@@ -67,9 +67,9 @@ The following identifiers are reserved and cannot be used otherwise:
 \begin{tabular}{ l l l l l }
 int & str & float & bool  & Layout \\
 List & Table & if & else & elif \\
-in & Sort & not & typeof & and \\
-or & continue & break & Write & Read \\
-stdout & stderr & true & false
+in & not & and & stdout \\
+or & Write & Read & stderr & true \\
+false 
 \end{tabular}
 }
 
@@ -167,31 +167,62 @@ An expression in \textbf{FRY} is a combination of variables, operators, constant
 \begin{tabbing}
 	\= prima\=ry-expression : \\
 		\>\> identifier \\
-		\>\> constant \\ 
+		\>\> literal \\ 
 		\>\> (expression)
 \end{tabbing}
 \end{itshape}
+
 Primary Expressions are either identifiers, constants, or parenthesized expressions. 
 \subsubsection{Identifiers}
 Identifiers types are specified during declaration by preceding that identifier by its type.  Identifiers can be used for any primitive or compound data types and any functions. 
-\subsubsection{Constants}
-Constants are either integer, string, float, or boolean constants as specified in \ref{sec:const}
+\subsubsection{Literal}
+Literals are either integer, string, float, or boolean constants as specified in \ref{sec:const}
 \subsubsection{Parenthesized Expressions}
 Parenthesized expression is simply an expression surrounded by parentheses. 
+
+\subsection{Set Builder Expressions}
+\label{sec:setbuild}
+\begin{tabbing}
+	\= \emph{set-bu}\=\emph{ild-expression}: \\
+	\> \> \emph{primary-expression} \\
+	\> \> \texttt{[} \emph{return-layout} \texttt{|} \emph{identifier} \texttt{<-} \emph{set-build-expression}\texttt{;} \emph{expression} \texttt{]}
+\end{tabbing}
+
+A set-build-expression consists of a \emph{return-layout}, which is the format of the columns which should be returned, an identifier for records in the table identifier specified by \emph{set-build-expression}, and an \emph{expression} which is a boolean expression.
+
+ The Set-builder notation evaluates the boolean expression for every record in the source table. If the boolean expression is true, then the \emph{return-layout} is returned for that record. The Set Builder expression finally returns a table composed of all of the records which passed the boolean condition, formatted with the \emph{return-layout}.
+
+
+\begin{tabbing}
+	\= \emph{retu}\=\emph{rn-layout}: \\
+	\> \> \emph{identifier} \\
+	\> \> \texttt{\{} \emph{layout specifier}\textsubscript{opt} \emph{layout-instance-list} \texttt{\}}
+\end{tabbing}
+The \emph{return-layout} must be a Layout type, and can be either a Layout \emph{identifier} or a \emph{Layout-instance-list} as described in \ref{sec:layout}.
 
 \subsection{Postfix Expression}
 Operators in a postfix expression are grouped from left to right.
 \begin{itshape}
 \begin{tabbing}
 	\= post\=fix-expression : \\
-		\> \> primary-expression \\
-		\>\> postfix-expression[expression(:expression)\textsubscript{opt}] \\		
-		\>\> postfix-expression.\{expression(:expression)\textsubscript{opt}\}\\
-		\>\> postfix-expression(argument-list\textsubscript{opt}) \\ 
+		\> \> set-build-expression \\
+		\>\> postfix-expression[slice-opt] \\		
+		\>\> postfix-expression.\{expression\textsubscript{opt}\}\\
 		\> \> expression$--$ \\
 		\> \> expression$++$ 
 \end{tabbing}
 \end{itshape}
+
+\begin{itshape}
+\begin{tabbing}
+	\= sli\=ce-opt : \\
+		\> \> :expr \\
+		\> \> expr: \\
+		\> \> expr:expr \\
+		\> \> expr \\
+\end{tabbing}
+\end{itshape}
+
 
 \subsubsection{List Element Reference}
 A list identifier followed by square brackets with an integer-valued expression inside denotes referencing the element at that index in the List. For instance \lstinline!MyLst[5]! would reference the $6^\mathrm{th}$ element of the List, \emph{MyLst}. Similarly, \lstinline!MyLst[n]! would reference the $n-1^\mathrm{th}$ element of MyLst. The type of this element is the same as the type of elements the List you are accessing contains. \\
@@ -200,30 +231,22 @@ Sublists can be returned by \emph{slicing} the list. By specifying the optional 
 \subsubsection{Layout Element Reference}
 \label{sec:layoutref}
 A layout identifier followed by a dot and an expression in braces ${ }$ references an element of a layout. The expression in the braces must either be \emph{(i)} the name of one of the member elements in the Layout you are accessing, such as \lstinline!MyLyt.{elem_name}! or \emph{(ii)} a integer reference to the $n^\mathrm{th}$ element of the Layout, i.e. \lstinline!MyLyt.{2}! would access the $1^\mathrm{st}$ member element. The type of the element returned will be the type that element was defined to be when the Layout was defined. If the member element you are accessing is itself a Layout, then the numeric and identifier references will both return a element of that Layout type. 
-Sublayouts can be returned by \emph{slicing} the layout. Layout slicing syntax is mostly the same as the List slicing, except you can also specify element names as the indices on either side of the colon. This returns an instance of unamed layout type with unamed elements.
-
-\subsubsection{Function Calls}
-A function call consists of a function identifer, followed by parentheses with a possibly empty argument list contained. A copy is made of each object passed to the function, so the value of the original object will remained unchanged. Function declarations are discussed in \ref{sec:funcdec}.
 
 \subsubsection{\emph{expression}$--$}
 The double minus sign ('-') decrements an integer value by 1. The type of this expression must be integer.
 \subsubsection{\emph{expression}$++$}
 The double plus sign ('+') increments an integer value by 1. The type of this expression must be integer.
 
-\subsection{Unary Operators}
+\subsection{Prefix Expressions}
 Unary operators are grouped from right to left and include logical negation, incrementation, and decrementation operators.
 \begin{tabbing}
-	\= \emph{una}\=\emph{ry-expression :} \\
+	\= \emph{pre}\=\emph{fix-expression :} \\
 		\> \> \emph{postfix-expression} \\
 		\>\> \texttt{not} \emph{unary-expression}\\
-		\>\> \texttt{typeof}(\emph{primary-expression})
 \end{tabbing}
 
 \subsubsection{\texttt{not} \emph{expression}}
 The \texttt{not} operator represents boolean negation. The type of the expression must be boolean.
-
-\subsubsection{\texttt{typeof}(\emph{expression})}
-The \texttt{typeof} operator returns the type of some identifier as a string.
 
 \subsection{Multiplicative Operators}
 These operators are grouped left to right.
@@ -250,14 +273,6 @@ These operators are grouped left to right.
 \end{itshape}
 
 $+$ and $-$ denote addition and subtraction of the two operands respectively. Additionally the $+$ also denotes string concatenation. For $-$, the expressions on either side of the operators must be either integer or floating point valued. For $+$, the expressions can be integer, floating point or strings. Both operands must be strings or both operands must be float/int. You cannot mix string operands with numeric operands.
-
-\subsection{Containment Operators}
-\begin{tabbing}
-	\= \emph{cont}\=\emph{ainment-expression} : \\
-		\>\> \emph{additive-expression} \texttt{in} \emph{containment-expression} \\	
-		\>\> \emph{additive-expression} \texttt{not in} \emph{containment-expression} 
-\end{tabbing}
-The containment operators check whether an element is contained in a List. The right operand must be a List and the left operand must be the same type as the elements that List contains. Both operators return a boolean value. If the element is in the list, then \texttt{in} returns \texttt{true} and if the element is not in the list, it returns \texttt{false}. \texttt{not in} returns the opposite values.
 
 \subsection{Relational Operators}
 \begin{itshape}
@@ -308,26 +323,68 @@ Assignment operators are grouped right to left.
 \begin{tabbing}
 	\= assig\=nment-expression : \\
 		\>\> logical-OR-expression \\
-		\>\> primary-expression$=$assignment-expression 
+		\>\> identifier$=$assignment-expression 
 \end{tabbing}
 \end{itshape}
 Assignment operators expect a variable identifier on the left and a constant or variable of the same type on the right side.
 
-
-\section{Declarations}
-% Type specifiers, struct union declarations, etc.
-
-Declarations give the ability to define identifiers type and value.
+\subsection{Function Calls}
 \begin{itshape}
 \begin{tabbing}
-	\= decla\=rations : \\
-		\> \> type-specifier declarator \\
-		\>\> type-specifier declarator = initializer \\
+	\= fun\=c-call : \\
+		\>\> assignment-expression \\
+		\>\> assignment-expression(argument-list\textsubscript{opt}) \\ 
 \end{tabbing}
 \end{itshape}
+A function call consists of a function identifer, followed by parentheses with a possibly empty argument list contained. A copy is made of each object passed to the function, so the value of the original object will remained unchanged. Function declarations are discussed in \ref{sec:funcdec}.
 
+\subsection{List Initializers}
+\begin{tabbing}
+	\=\emph{lis}\=\emph{t-initializer} : \\
+		\>\> \emph{func-call} \\
+		\>\> [\emph{list-intializer-list}] \\
+		\>\> [\emph{func-call} \texttt{to} \emph{func-call}] 
+\end{tabbing}
+
+\begin{tabbing}
+	\= \emph{list} \= \emph{-initializer-list} : \\
+		\>\> \emph{func-call} \\
+		\>\> \emph{list-intializer-list,func-call}
+\end{tabbing}
+A list initializer generates a list containing a range of values. The first form creates a list containing the values specified in the \emph{list-initializer-list}. Every element of the \emph{list-initializer-list} needs to be of the same type or an exception is thrown at compile time. The second form takes two integer values and returns an inclusive list containing the values from the first integer to the second. The first integer must be smaller than the second integer.
+
+\subsection{Layout Initializer}
+\begin{tabbing}
+	\= \emph{lay}\=\emph{out-initializer} : \\
+		\>\> \emph{list-initializer} \\
+		\>\> \texttt{Layout} \emph{identifier} {\emph{layout-initializer-list}} \\
+\end{tabbing}
+
+\begin{tabbing}
+	\= \emph{lay}\=\emph{out-initializer-list} : \\ 
+		\>\> \emph{list-initializer} \\
+		\>\> \emph{list-intializer-list,list-initializer}
+\end{tabbing}
+A layout initializer creates an instance of the layout type specified. The type of each layout initializer field needs to match those defined in the layout.
+
+\subsection{Table Initializer}
+\begin{tabbing}
+	\= \emph{tab}\=\emph{le-initializer} : \\
+		\>\> \emph{layout-initializer} \\
+		\>\> \texttt{Table} (\emph{full-type}\textsubscript{\emph{opt}}) \\
+\end{tabbing}
+
+A Table initializer, initializes a table and optionally associates a layout with that table. \emph{full-type} is described in detail in \ref{sec:type_decls}
+
+\subsection{Expressions}
+\begin{tabbing}
+	\= \emph{exp}\=\emph{ression} : \\
+		\>\> \emph{table-initializer} 
+\end{tabbing}
+\section{Declarations}
 \subsection{Type Specifiers}
-The different \emph{type-specifiers} available are:
+\label{sec:type_decls}
+The different type specifiers available are:
 
 \begin{tabbing}
 	\= \emph{type}\=\emph{-specifiers} : \\
@@ -335,90 +392,48 @@ The different \emph{type-specifiers} available are:
 		\>\> \texttt{str} \\
 		\>\> \texttt{float} \\
 		\>\> \texttt{bool} \\
-		\>\> \texttt{List} \\
-		\>\> \texttt{Layout} \\
-		\>\> \texttt{Table} \\
-\end{tabbing}
-
-Exactly one type-specifier must be provided during a declaration. These types are described in more detail in \ref{sec:types}.
-
-\subsection{List Declarations}
-\label{sec:list}
-A List is an ordered collection of elements of the same type. 
-\begin{tabbing}
-	\= \emph{List}\=\emph{-declarators} : \\
-		\> \> \texttt{List} \emph{identifier} \\
-		\>\> \texttt{List} \emph{identifier} \texttt{=} \emph{List-intializer } \texttt{} 
-\end{tabbing}
-A List declaration consists of the keyword \texttt{List} followed by an identifier for the list and optionally followed by an assignment from a \emph{List-initializer}.
-
-\begin{tabbing}
-	\= \emph{List}\=\emph{-intializer} : \\
-		\> \> \texttt{[} \emph{List-declaration-list} \texttt{]} \\
-		\>\> \texttt{[}\emph{identifier-or-constant}\texttt{ to }\emph{identifier-or-constant}\texttt{]}
-\end{tabbing}
-
-A list-initializer intializes an unnamed list one of two ways. The first way defines each element of the list explicitly in square brackets using a \emph{List-declaration-list}. The second way requires two integer-valued \emph{identifier-or-constant} and generates a list ranging from the first \emph{identifier-or-constant} to the second \emph{identifier-or-constant}. The first \emph{identifier-or-constant} must be smaller than the second.
-
-\begin{tabbing}
-	\= \emph{List}\=\emph{-declaration-list} : \\
-		\> \> \emph{constant-or-identifier} \\
-		\>\> \emph{List-declaration-list, constant-or-identifier}
+		\>\> \texttt{Table} 
 \end{tabbing}
 \begin{tabbing}
-	\= \emph{const}\=\emph{ant-or-identifier} : \\
+	\= \emph{full}\=\emph{-type} : \\
+		\>\> \emph{type-specifier} \\
+		\>\> \emph{type-specifier} \texttt{List} \\
+		\>\> \texttt{Layout} \emph{identifier} 
+\end{tabbing}
+
+\subsection{Variable Declarations}
+\begin{tabbing}
+	\= \emph{vari}\=\emph{able-declaration} : \\
+		\> \> \emph{full-type} \emph{declarator} 
+\end{tabbing}
+
+\begin{tabbing}
+	\= \emph{decl}\=\emph{arator} : \\
 		\> \> \emph{identifier} \\
-		\>\> \emph{constant}
+		\> \> \emph{identifier} \texttt{=} \emph{expr} 
 \end{tabbing}
-
-The \emph{List-declaration-list} is a comma-separated list of identifiers or constants which define the values contained in that list. The associated type of the list is determined by the first element in the \emph{List-declaration-list}. It is invalid to add elements of a different type than the first element to that list. Declaring a List with no \emph{List-declaration-list} initializes an empty list with no associated type. The first element added to that list sets that List's type. 
-
-For example,
-\begin{lstlisting}
-List l_int = [1,2,3,4]
-List l_empty
-List l_str = ["This", "is", "a", "list"]
-List l_int = [1 to 100]
-\end{lstlisting}
-declares a list containing the first for natural integers, an empty list, and a list of strings.
+When assigning a value in a variable declaration, the type of the identifier in \emph{full-type} must match that of the \emph{expr} which it is assigned.
 
 \subsection{Layout Declarations}
 \label{sec:layout}
 A Layout is a collection of optionally named members of various types.
 \begin{tabbing}
-	\= \emph{Layout}\=\emph{-intializers} : \\
-		\> \> \texttt{Layout} \emph{identifier} \texttt{= \{} \emph{Layout-declaration-list, Print-specifier\textsubscript{opt}} \texttt{\}}
+	\= \emph{layout}\=\emph{-declaration} : \\
+		\> \> \texttt{Layout} \emph{identifier} \texttt{= \{} \emph{layout-declaration-list} \texttt{\}}
 \end{tabbing}
-A Layout declaration consists of the keyword \texttt{Layout} followed by an identifier and then an assignment from a  \emph{Layout-declaration-list} surrounded by curly braces. It is also optional to define a \emph{Print-specifier}, which is a string that defines how this Layout should be formatted when printed.
+A Layout declaration consists of the keyword \texttt{Layout} followed by an identifier and then an assignment from a  \emph{layout-declaration-list} surrounded by curly braces. 
 \begin{tabbing}
-	\= \emph{Layout}\=\emph{-declaration-list} : \\
-		\> \> \emph{Layout-element} \\
-		\>\> \emph{Layout-declaration-list, Layout-element}
-\end{tabbing}
-\begin{tabbing}
-	\= \emph{Layout}\=\emph{-element} : \\
-		\> \> \emph{type-specifier}\texttt{:}\emph{identifier\textsubscript{opt}}
+	\= \emph{layout}\=\emph{-declaration-list} : \\
+		\> \> \emph{layout-element} \\
+		\>\> \emph{layout-declaration-list, layout-element}
 \end{tabbing}
 \begin{tabbing}
-	\= \emph{Print}\=\emph{-specifier} : \\
-		\> \> \texttt{Print:}\emph{string-identifier-or-constant}
+	\= \emph{layout}\=\emph{-element} : \\
+		\> \> \emph{full-type}\texttt{:}\emph{identifier\textsubscript{opt}}
 \end{tabbing}
-The \emph{Layout-declaration-list} is a comma-separated list of \emph{Layout-elements} which defines the members of the Layout being declared. If no identifier is provided for an element, it can be accessed using the numeric Layout element reference as described in \ref{sec:layoutref}. If no \emph{Print-specifier} is defined, the elements are printed in the same order they were defined with any specified delimiter.
+The \emph{Layout-declaration-list} is a comma-separated list of \emph{Layout-elements} which defines the members of the Layout being declared. If no identifier is provided for an element, it can be accessed using the numeric Layout element reference as described in \ref{sec:layoutref}. 
 
 An instance of an already created layout is created using similar syntax to the declaration:
-
-\begin{tabbing}
-	\= \emph{Layout}\=\emph{-instance-creation} : \\
-		\> \> \texttt{Layout} \emph{identifier} \emph{identifier} \\
-		\>\> \texttt{Layout} \emph{identifier} \emph{identifier} \texttt{= Layout} \emph{identifier} \texttt{\{} \emph{Layout-instance-list} \texttt{\}}
-\end{tabbing}
-The first identifier is the identifier of the Layout you are creating an instance of and the second is the identifier of this layout instance. The identifier on the right side of the assignment specifies what type of Layout is contained in the \emph{Layout-instance-list}.
-\begin{tabbing}
-	\= \emph{Layout}\=\emph{-instance-list} : \\
-		\> \> \emph{constant-or-identifier} \\
-		\>\> \emph{Layout-instance-list}\texttt{,} \emph{constant-or-identifier}
-\end{tabbing}
-The types of each element in the \emph{Layout-instance-list} must match the types of the members of the Layout type. Each member of the Layout instance declared is assigned the value of the \emph{constant-or-identifier} at that member's position. A mismatch between the member type and the constant or identifier type is considered an error. 
 
 Layout creations have a few special rules: 
 \begin{itemize}
@@ -429,56 +444,17 @@ Layout creations have a few special rules:
 
 \end{itemize}
 
-Some examples of Layout declaration and creation are
-
-\begin{lstlisting}
-Layout date = { int: mon, int: day, int: year 
-		Print:mon+"-"+day+"-"+year };
-Layout date today = Layout date{10, 23, 2014};
-Write(stdout, today.mon + "-" + today.day + "-" + today.year);
-# 10-23-2014
-Layout date nextweek = Layout date{today.mon, 
-today.day+7, today.year};
-Layout userinfo = {str: Fname, str: Lname, 	
-			Layout date:bday};
-\end{lstlisting}
-In this example, date is defined as a Layout with three integer fields, for month, day, and year, and has a \emph{Print-specifier} defined. An instance of the date Layout is created with value 10-23-2014 and written to stdout using the \emph{Write} function. \emph{Write} is a built-in function which takes two arguments, an output (stdout,stderr, or string name of a file) and the object to be written. The date Layout instance \texttt{nextweek} is computed from today's date. The \texttt{userinfo} layout is created with the date Layout nested inside of it. 
-
-\subsection{Table Declarations}
-A Table represents a relational table of data. A Table is represented as a special type of Layout where every element of the layout is a List of the same size.
-
-\begin{tabbing}
-	\= \emph{Table}\=\emph{-intializers} : \\
-		\> \> \texttt{Table}\texttt{(} \emph{identifier\textsubscript{opt}} \texttt{)} \emph{identifier} 
-\end{tabbing}
-
-A table is initialized with the keyword \texttt{Table} followed by the table identifier and then an optional corresponding layout inside of parentheses. This Table will then have a List of each type in the corresponding layout. If the table is initialized without a corresponding layout, then the first layout instance added to this table will define the layout of its table. Since a Table is just a special type of layout, any layout operations can be performed on the table. For example, since any columns of the table are just List elements of the corresponding "Layout", they can be accessed using the Layout reference techniques explanined in \ref{sec:layoutref}. In particular, tables without a corresponding layout can be accessed using the numeric reference technique mentioned in that section.
-
-Some Table declaration/initialization examples are:
-
-\begin{lstlisting}
-Layout date = { int: mon, int: day, int: year }
-Table date_tbl = \
-	Read("/home/tdevoe/dates.txt", ",", date)
-\end{lstlisting}
-\begin{lstlisting}
-Table date_tbl2
-Layout date myDate = {9,15,2012}
-date_tbl2 = append(date_tbl2, myDate)
-\end{lstlisting}
-
-The first example illustrates creating a Table from a file using the built-in \emph{Read} function. \emph{Read} takes two arguments, the name of the file (or stdin,stdout) to read from, and a field delimiter. The second example illustrates initializing a table without a corresponding layout and then append a record to it, using the built-in \emph{Append} function. \emph{Append} takes as arguments a record and a table. As long as the record conforms to the table's associated Layout, the record is appended to the end of the table and the resulting table is returned. If the table doesn't have an associated layout yet, then the resulting table's layout is defined as the same as the record being appended.
 
 \subsection{Function Declarations}
 \label{sec:funcdec}
 Function declarations are created along with their definition and have the following format:
 \begin{tabbing}
-	\= \emph{Function}\=\emph{-declarations} : \\
-		\> \> \emph{type-specifier identifier}\texttt{(} \emph{parameter-list\textsubscript{opt}} \texttt{) 
-\{ } \emph{function-definition} \texttt{\}}
+	\= \emph{function}\=\emph{-declaration} : \\
+		\> \> \emph{full-type identifier}\texttt{(} \emph{parameter-list\textsubscript{opt}} \texttt{) 
+\{ } \emph{statement-list} \texttt{\}}
 \end{tabbing}
 
-The type-specifier in the beginning of the function declaration specifies what type is returned by that function. The identifier that follows is the name of the function and will be referenced anytime that function should be called. 
+The full-type in the beginning of the function declaration specifies what type is returned by that function. The identifier that follows is the name of the function and will be referenced anytime that function should be called. 
 
 Then there is a \emph{parameter-list}, i.e. a list of arguments, inside of parentheses.
 \begin{tabbing}
@@ -493,19 +469,22 @@ After the arguments comes the function definition inside of curly braces. The de
 \section{Statements}
 % Expression Statements, Flow Control, Iteration Stmt (for, while)
 % Big one is list comprehension syntax
-Unless otherwise described, statements are executed in sequence. Statements can be broken up into the following:
+Unless otherwise described, statements are executed in sequence. Statements should be ended by a semi-colon(";"). Statements can be broken up into the following:
 \begin{itshape}
 \begin{tabbing}
 	\= stat\=ement : \\
 		\> \> expression-statement \\
+		\> \> return-statement \\
+		\> \> statement-block \\
 		\>\> conditional-statement \\
-		\> \> iteration-statement \\
-		\> \> jump-statement \\
-		\> \> set-builder-statement  
+		\> \> iterative-statement \\
+		\> \> variable-declaration \\
+		\> \> layout-declaration \\
+		\> \> function-declaration
 \end{tabbing}
 \end{itshape}
 
-Statements are separated by newlines and a series of statements will be called a \emph{statement-list}. A single statement can be spread across multiple lines by ending the line with a backslash ($\backslash$):
+Statements are separated by newlines and a series of statements will be called a \emph{statement-list}. 
 \begin{tabbing}
 	\= \emph{stat}\=\emph{ement-list} : \\
 		\> \> \emph{statement} \\
@@ -519,96 +498,62 @@ Expressions statements make up the majority or statements:
 \begin{itshape}
 \begin{tabbing}
 	\= expr\=ession-statements : \\
-		\>\> expression
+		\>\> expression 
 \end{tabbing}
 \end{itshape}
 
 An expression statement is made up of one or more expressions as defined in \ref{sec:expr}. After the entire statement is evaluated and all effects are completed, then the next statement is executed.
+
+\subsection{Return Statement}
+\begin{tabbing}
+	\= \emph{ret}\=\emph{urn-statements} : \\
+		\>\> \texttt{ret} \emph{expr}
+\end{tabbing}
+
+A return statement is included in a function and indicates the value to be returned by that function. This expr needs to have the same type as defined in the function declaration.
+
+\subsection{Statement Block}
+\begin{tabbing}
+	\= \emph{stat}\=\emph{ement-block} : \\
+		\>\> \texttt{\{} \emph{statement-list} \texttt{\}}
+\end{tabbing}
+
+A statement block groups multiple statements together. Any variable declared in a statement block is only in scope until that statement block is closed.
 
 \subsection{Conditional Statements}
 Conditional statements control the flow of a program by performing different sets of statements depending on some boolean value. 
 
 \begin{tabbing}
 	\= \emph{cond}\=\emph{itional-statements} : \\
-		\> \> \texttt{if (}\emph{expression}\texttt{)} \emph{statement-list}\\
-		\>\>  \texttt{if (}\emph{expression}\texttt{)} \emph{statement-list} \texttt{} \texttt{else}\texttt{ \{} \emph{statement-list} \texttt{\}} \\
-		\>\>  \texttt{if (}\emph{expression}\texttt{)} \emph{statement-list} \texttt{} \emph{elif-list} \texttt{ else} \emph{statement-list} \\
+		\>\>  \texttt{if (}\emph{expression}\texttt{)} \emph{statement}\texttt{} \emph{elif-list} \\
+		\>\>  \texttt{if (}\emph{expression}\texttt{)} \emph{statement} \texttt{} \emph{elif-list} \texttt{ else} \emph{statement} \\
 \end{tabbing}
 \begin{tabbing}
 	\= \emph{eli}\=\emph{f-list} : \\
-		\> \> \texttt{elif (}\emph{expression}\texttt{)} \emph{statement-list} \\
-		\> \> \emph{elif-list} \texttt{elif (}\emph{expression}\texttt{)} \emph{statement-list}\\
+		\> \> \texttt{elif (}\emph{expression}\texttt{)} \emph{statement} \\
+		\> \> \emph{elif-list} \texttt{elif (}\emph{expression}\texttt{)} \emph{statement}\\
 \end{tabbing}
 
-
-
-The three different conditional statements here all operate on a similar idea. Based on the value the expression in parentheses, which must be a boolean-valued expression, do or do not perform the statements in the curly braces. For an \emph{if} statement, if the expression in parentheses is true, then the statements inside the \emph{if} block is evaluated. If that \emph{if} statement has an attached \emph{else} block, then the else block is evaluated if the expression is false. 
-
-If there are \emph{elif} blocks, then if any expression is true, the statement inside is evaluated and then conditional block is then jumped out of, i.e. no further expressions are evaluated. If no expression is true, then the \emph{else} block is evaluated if it exists.
+The expression in the parentheses after \texttt{if}, \texttt{elif}, and \texttt{else} must be boolean-valued. If it is true, execute the corresponding statement and jump out of the conditional expression. If it is false, do not execute the statement and evaluate the next expression after an \texttt{elif} or \texttt{else}.
 
 \subsection{Iterative Statements}
 
 \begin{tabbing}
 	\= \emph{iter}\=\emph{ative-statements}: \\
-	\> \> \texttt{for} \emph{identifier} \texttt{<-} \emph{iterator} \texttt{\{} \emph{statement-list} \texttt{\}} \\
-	\> \> \texttt{while (} \emph{expression} \texttt{)} \texttt{\{} \emph{statement-list} \texttt{\}}
+	\> \> \texttt{for} \emph{identifier} \texttt{<-} \emph{expression} \emph{statement} \\
+	\> \> \texttt{while (} \emph{expression} \texttt{)} \emph{statement}
 \end{tabbing}
 
 \subsubsection{for loop}
 
-A \emph{for} loop executes the \emph{statement-list} once for each elements in an \emph{iterator}.
-
-\begin{tabbing}
-\= \emph{iter}\=\emph{ator}:\\
-\>\> \emph{List-identifier} \\
-\>\> \emph{List-intializer}
-\end{tabbing}
-
-An \emph{iterator} is either a predefined list or an unnamed \emph{List-initializer}, see \ref{sec:list} for more information on these. The first identifier in the for loop represents the element in the iterator that the loop is currently on and can be referenced as such in the scope of the for loop block.
+The type of the expression following the left arrow ("<-") must be a list. A \emph{for} loop executes the \emph{statement} once for each elements in that List. 
 
 \subsection{while loop}
 
 The \emph{expression} inside of the parentheses of a while loop must be boolean-valued. The while loop repeatedly executes the \emph{statement-list} as long as the value of the expression is \texttt{true}.
 
-\subsection{Jump Statements}
-Jump statements allow the program to jump out of an iterative statement.
-
-\begin{tabbing}
-	\= \emph{jump}\=\emph{-statements}: \\
-	\> \> \texttt{continue} \\
-	\> \> \texttt{break}
-\end{tabbing}
-\texttt{continue} jumps to the start of the loop that the program is currently in. \texttt{break} jumps to the end and out of the loop the program is currently in.
-
-\subsection{Set Builder Statements}
-\label{sec:setbuild}
-Set builder statements are a major part of \textbf{FRY} and can create new Tables from other tables using Set-builder notation.
-\begin{tabbing}
-	\= \emph{Set-bu}\=\emph{ilder-statements}: \\
-	\> \> \texttt{[} \emph{return-layout} \texttt{|} \emph{elements-of} \texttt{;} \emph{expression} \texttt{]}
-\end{tabbing}
-
-A Set-builder-statement consists of a \emph{return-layout}, which is the format of the columns which should be returned, a \emph{elements-of}, which are identifiers for the records in up to two tables, and an \emph{expression} which is a boolean expression.
-
- The Set-builder notation evaluates the boolean expression for every record in the source table(s). If the boolean expression is true, then the \emph{return-layout} is returned for that record (or pair of records). The Set Builder statement finally returns a table composed of all of the records which passed the boolean condition, formatted with the \emph{return-layout}.
-
-\begin{tabbing}
-	\= \emph{elem}\=\emph{ents-of}: \\
-	\> \> \emph{identifier} \texttt{<-} \emph{identifier} \\
-	\> \> \emph{identifier} \texttt{<-} \emph{identifier} \texttt{,}  \emph{identifier} \texttt{<-} \emph{identifier}
-\end{tabbing}
-
-The \emph{elements-of} is comprised of two identifiers, the second identifier must be a valid table and the first is a name for the records in that table. The first identifier is only valid within the Set-builder statement. There can be either one or two pairs of identifiers, for one or two source tables.
-
-\begin{tabbing}
-	\= \emph{retu}\=\emph{rn-layout}: \\
-	\> \> \emph{identifier} \\
-	\> \> \texttt{\{} \emph{Layout-instance-list} \texttt{\}}
-\end{tabbing}
-The \emph{return-layout} must be a Layout type, and can be either a Layout \emph{identifier} or a \emph{Layout-instance-list} as described in \ref{sec:layout}.
-
 \section{Scope}
-Scope is handled simply in \textbf{FRY}, a variable cannot be referenced outside of the code block it was declared inside. In most cases, this block is denoted by curly braces (Conditional Statements, Iterative Statements, Function Definitions). One exception is the \emph{elements-of} section of a Set-builder statements \ref{sec:setbuild}, the scope for these variables are only inside the Set Builder statement (i.e. inside the square brackets). Any variable delcared outside of any code block is considered a global variable and can be referenced anywhere in the program.
+Scope is handled simply in \textbf{FRY}, a variable cannot be referenced outside of the code block it was declared inside. In most cases, this block is denoted by curly braces. One exception is the \emph{elements-of} section of a Set-builder statements \ref{sec:setbuild}, the scope for these variables are only inside the Set Builder statement (i.e. inside the square brackets). Any variable delcared outside of any code block is considered a global variable and can be referenced anywhere in the program.
 
 
 \end{document}
