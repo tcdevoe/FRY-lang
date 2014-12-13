@@ -15,6 +15,10 @@ let print_sym_tbl (syms: symbol_table) = let str = "SYMBOL TABLE: \n[ Variables 
 																	" Tables :" ^ String.concat "\n" (List.map (fun (typ,name) -> "[ Table " ^ Ast.data_type_s typ ^ " " ^ name ^ "]") syms.tables) ^ "]"
 											in print_endline str
 
+let print_funcs (f_decs: s_func_decl list) = print_endline (String.concat "\n" (List.map 
+	(fun f_dec -> "FUNC : " ^ f_dec.fname ^"\nreturn type : "^ data_type_s f_dec.ret_type) f_decs))
+
+
 let rec find_variable (scope: symbol_table) name = 
 	try
 		List.find (fun (_, s, _) -> s = name ) scope.variables
@@ -129,7 +133,11 @@ and get_Binop_return (e1: expr) (o: op) (e2: expr) (env: translation_environment
 		|	(Float, Int) -> S_Binop(e1, o, e2), Float
 		|	(Int, Int) -> S_Binop(e1, o, e2), Int
 		|	(Float, Float) -> S_Binop(e1, o, e2), Float
-		|	_ -> raise (Error("Incompatible types for binary operator.")))
+		|   (String, Int) -> S_Binop(e1, o, e2), String
+		|   (Int, String) -> S_Binop(e1, o, e2), String
+		|   (String, Float) -> S_Binop(e1, o, e2), String
+		|   (Float, String) -> S_Binop(e1, o, e2), String
+		|	_ -> raise (Error("Incompatible types for addition operator.")))
 	|  Sub -> S_Binop(e1, o, e2), get_math_binop t1 t2 env
 	|  Mult -> S_Binop(e1, o, e2), get_math_binop t1 t2 env 
 	|  Div -> S_Binop(e1, o, e2), get_math_binop t1 t2 env
@@ -173,7 +181,7 @@ and check_list_gen (e1: expr) (e2: expr) (env: translation_environment) =
 	let (e1, t1) = check_expr e1 env in 
 	let (e2, t2) = check_expr e2 env in
 	if t1 = Int && t2 = Int then
-		S_ListGen(e1, e2), t1
+		S_ListGen(e1, e2), Int
 	else
 	   	raise (Error("List generator must have integer valued ranges."))
 
@@ -190,6 +198,10 @@ and check_list_lit (l: expr list) (env: translation_environment)  =
 and check_call (f: string) (es: expr list) (env: translation_environment) = 
 	let sexpr_l_typ = List.map (fun e -> check_expr e env) es in
 	let ret_funcs = find_func env.funcs f in
+	(* Need to loop through all functions of name f to see if any signatures map caller *)
+	match ret_funcs with
+	[] -> raise (Error("No functions named " ^ f))
+|   _ -> 
 	let (sexpr_l, fdec) = find_func_signature f sexpr_l_typ ret_funcs in 
 		S_Call(f, sexpr_l), fdec.ret_type
 
@@ -197,7 +209,7 @@ and find_func_signature (f: string) (opts: (s_expr * dataType) list) (ret_funcs:
 	(* Check function opts *)
 	try 
 		match ret_funcs with 
-						[] -> raise (Error("Argument is not the correct type for function "^f))
+						[] -> raise (Error("No signature matches function call "^f))
 					|	hd::tl -> let forms = hd.formals in 
 									let sexpr = List.map2 (fun (opt: s_expr * dataType) (form: s_var_decl) -> 
 									let opt_typ = snd opt in
@@ -205,10 +217,10 @@ and find_func_signature (f: string) (opts: (s_expr * dataType) list) (ret_funcs:
 														S_BasicDecl(d,_)
 													|   S_ListDecl(d,_)
 													|   S_LayoutDecl(d,_) -> d) in
-									if opt_typ = form_typ then
-										fst opt
-									else
-										S_Noexpr) opts forms in 
+										if opt_typ = form_typ then
+											fst opt
+										else
+											S_Noexpr) opts forms in 
 									let matched = List.exists (fun e -> e = S_Noexpr) sexpr in
 									if matched then
 										find_func_signature f opts tl
@@ -313,7 +325,8 @@ and check_set_build e1 id e2 e3 env : (s_expr * dataType) =
 
 
 let rec check_stmt (s: Ast.stmt) (env: translation_environment) = match s with
-  Block(ss) ->	let scope' = { parent = Some(env.scope); variables = []; layouts = env.scope.layouts; tables = env.scope.tables; } in 
+  Block(ss) ->	
+	print_sym_tbl env.scope;let scope' = { parent = Some(env.scope); variables = []; layouts = env.scope.layouts; tables = env.scope.tables; } in 
   				let env' = { env with scope = scope'} in
   				let ss = List.map (fun s -> check_stmt s env') (List.rev ss) in
   				scope'.variables <- List.rev scope'.variables;
@@ -355,6 +368,10 @@ and check_layout_creation (name: string) (v_list: var_decl list) (env: translati
 					ret_type = Void; 
 					formals = [S_BasicDecl(String, S_Id("o_file", String)); S_LayoutDecl(Layout(name), S_Id("output_str", Layout(name)))];
 					body = [S_Expr(S_Noexpr, Void)];}::env.funcs;
+		env.funcs <- { fname = "Append"; 
+					ret_type = Void; 
+					formals = [S_BasicDecl(Table, S_Id("tbl", Table)); S_LayoutDecl(Layout(name), S_Id("layout_rec", Layout(name)))];
+					body = [S_Expr(S_Noexpr, Void)];}::env.funcs;
 		(* Layouts created are kept track of in the symbol table *)
 		S_Expr(S_Noexpr, Void)
 
@@ -379,24 +396,24 @@ and check_return (e: expr) (env: translation_environment) =
 
 (* e1 must be an identifier; e2 must be a list type *)
 and check_for (e1: expr) (e2: expr) (s: stmt) (env: translation_environment) = 
+
 	match e1 with
-	Id(x) -> let scope' = { env.scope with variables = (Void, x, S_Noexpr)::env.scope.variables } in
-		     let env' = { env with scope = scope'} in
-			 let (e1, t1) = check_expr e1 env' in
+	Id(x) -> let scope' = { parent = Some(env.scope); variables = [(Void, x, S_Noexpr)]; layouts = env.scope.layouts; tables = env.scope.tables; } in 
+			 let env' = { env with scope = scope' } in
+		     let (_, _) = check_expr e1 env' in
 			 let (e2, t2) = check_expr e2 env' in
 			 	let t1 = (match t2 with
 						 	List(typ) -> typ
 						| 	_	-> t2) in
 				 env'.scope.variables <- (t1, x, S_Noexpr)::env.scope.variables;
 				 match e2 with
-				  S_Id(name, typ) -> let (typ,_,exp) = find_variable env'.scope name in
+				  S_Id(name, _) -> let (typ,_,_) = find_variable env'.scope name in
 				 	(match typ with 
-				 		List(t) -> let s = check_stmt s env' in S_For(S_Id(x, t2), e2, s)
+				 		List(_) -> let s = check_stmt s env' in S_For(S_Id(x, t2), e2, s)
 				 	|   _ -> raise (Error("Must iterate over a list type. Type " ^ data_type_s typ ^ " found")))
 				| S_ListLit(_,_) -> let s = check_stmt s env' in S_For(S_Id(x, t2), e2, s)
 				| S_ListGen(_,_) -> let s = check_stmt s env' in S_For(S_Id(x, t2), e2, s) 
 				| _ -> raise (Error("How did you get here?"))
-	|	_ -> raise (Error("First arg of for loop must be an identifier"))
 
 
 and check_while (e: expr) (s: stmt) (env: translation_environment) = 
@@ -411,7 +428,7 @@ and check_var_decl (v: var_decl) (env: translation_environment) =
 	match v with 
 	VarDecl(d,e) ->
 		(match d with
-		List(typ) ->  (match e with
+		List(typ) ->   (match e with
 									Id(x) -> let exist = List.exists (fun (_, s, _) -> s = x) env.scope.variables in
 											if exist then
 												raise (Error("Identifier already declared"))
@@ -504,7 +521,7 @@ let check_fdecl (func: Ast.func_decl) (env: translation_environment) : (s_func_d
 		let formals = (List.rev (List.map (fun x -> check_formals x env') func.formals)) in
 		let f = { Sast.fname = func.fname; Sast.ret_type = func.ret_type; Sast.formals = formals; Sast.body = (List.map (fun x -> check_stmt x env') func.body );} in
 		env.funcs <- f::env.funcs; f
-
+	   	
 (* Need to initialize reserved keywords and built-in funcs *)
 let init_env : (translation_environment) =
 	let func_i = [{ fname = "Write"; 
@@ -530,10 +547,18 @@ let init_env : (translation_environment) =
 				  { fname = "Read";
 				  	ret_type = Table;
 				  	formals = [S_BasicDecl(String, S_Id("in_file", String));S_BasicDecl(String, S_Id("delim", String))];
-				  	body = [S_Expr(S_Noexpr, Void)]; }; ] in
+				  	body = [S_Expr(S_Noexpr, Void)]; };
+				  { fname = "Column";
+				  	ret_type = List(String);
+				  	formals = [S_BasicDecl(Table, S_Id("tbl", Table));S_BasicDecl(String, S_Id("col_name", String))];
+				  	body = [S_Expr(S_Noexpr, Void)]; };	
+				  { fname = "Column";
+				  	ret_type = List(String);
+				  	formals = [S_BasicDecl(Table, S_Id("tbl", Table));S_BasicDecl(Int, S_Id("col_id", Int))];
+				  	body = [S_Expr(S_Noexpr, Void)]; };] in
 	let scope_i = { parent = None; 
 				   	variables = [(String, "stdout", S_Noexpr); (String, "stderr", S_Noexpr)]; layouts=[]; tables=[];} in 
-	{ funcs = func_i ; scope = scope_i; return_type = Void; in_func = false; inSetBuild = "NOT"; } 			   	
+	{ funcs = func_i ; scope = scope_i; return_type = Void; in_func = false; inSetBuild = "NOT"; } 
 
 let check_prgm (prog: Ast.program ) : (Sast.s_program) = 
 	let env = init_env in

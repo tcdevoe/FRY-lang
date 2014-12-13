@@ -3,9 +3,9 @@ open Ast
 
 let rec j_prgm (prog: Sast.s_program) = 
 	"import fry.*;" ^
-	"import java.util.ArrayList;\n" ^
 	"import java.util.Arrays;\n" ^ 
 	"import java.io.IOException;\n" ^
+	"import java.util.ArrayList;\n" ^
 	"public class fry{\n" ^
 	(* Write Layouts as private classes *)
 	String.concat "\n" (List.map j_layout prog.syms.layouts) ^ 
@@ -28,9 +28,10 @@ and j_obj_data_type (typ: dataType)  = match typ with
 |   Int -> "Integer"
 |   Float -> "Float"
 |   Bool -> "Boolean"
-|   List(t) ->  "ArrayList<" ^ j_obj_data_type t ^ ">"
+|   List(t) ->  "FRYList<" ^ j_obj_data_type t ^ ">"
 |	Layout(name)  -> name
 |   Table ->  "FRYTable"
+
 and getListType = function
 	List(t) -> j_obj_data_type t
 
@@ -62,16 +63,22 @@ and j_expr = function
 							| 	LayRef -> writeLayRef e1 r e2 typ inSetBuild)
 | 	S_Assign(v, e) ->  writeAssign v e
 |   S_LayoutLit(d,t, inSetBuild) -> writeLayoutLit d t inSetBuild
-|   S_Call(f, es) -> (match f with 
+|   S_Call(f, es) -> writeFuncCall f es
+|   S_TableInit(typ) -> "new FRYTable( new " ^ j_obj_data_type typ ^ "() )"
+| S_SetBuild(e1, id, e2, e3) -> writeSetBuild e1 id e2 e3
+| S_Noexpr -> ""
+
+and writeFuncCall f es =
+match f with 
 	| "Write" -> "IOUtils.Write" ^ "(" ^
 		String.concat ", " (List.map elemForIO es) ^ ")"		
 	| "Read" -> "IOUtils.Read" ^ "(" ^
 		String.concat ", " (List.map elemForIO es) ^ ")"
+	| "Append" -> "IOUtils.Append" ^ "(" ^
+			String.concat ", " (List.map j_expr es) ^ ")"
+	| "Column" -> (match es with [tbl; col_name] -> j_expr tbl ^ ".getColumn("^j_expr col_name^")")
 	| _ -> f ^ "(" ^
-		String.concat ", " (List.map (fun e -> j_expr e ) es) ^ ")")
-|   S_TableInit(typ) -> "new FRYTable( new " ^ j_obj_data_type typ ^ "() )"
-| S_SetBuild(e1, id, e2, e3) -> writeSetBuild e1 id e2 e3
-| S_Noexpr -> ""
+		String.concat ", " (List.map (fun e -> j_expr e ) es) ^ ")"
 
 and writeLayoutLit d t inSetBuild =
 	if inSetBuild = "NOT" then
@@ -79,20 +86,15 @@ and writeLayoutLit d t inSetBuild =
 	else
 		"new String[]{" ^ String.concat "," (List.rev (List.map j_expr t)) ^ "}"
 
-and writeSetBuild e1 id e2 e3 =  "ArrayList<String[]>  __ret_data__ = new ArrayList<String[]>("^j_expr e2^".getData().size());\nfor(String[] "^id^" : " ^ j_expr e2 ^ ".getData()){\n"^ writeSetBuildRefs e3 e2 ^"\n" ^ writeSetBuildRefs e1 e2 ^"\nif("^ j_expr e3 ^ "){ __ret_data__.add("^j_expr e1^");}\n}FRYTable __tmp_tbl__  = new FRYTable(__ret_data__,"^j_expr e2^".layout);"
+and writeSetBuild e1 id e2 e3 =  "FRYList<String[]>  __ret_data__ = new FRYList<String[]>("^j_expr e2^".getData().size());\nfor(String[] "^id^" : " ^ j_expr e2 ^ ".getData()){\n"^ "\nif("^ j_expr e3 ^ "){ __ret_data__.add("^j_expr e1^");}\n}FRYTable __tmp_tbl__  = new FRYTable(__ret_data__,"^j_expr e2^".layout);"
 
-
-and writeSetBuildRefs e (tbl: s_expr) = 
-	match e with
-	S_Binop(e1, o , e2) -> (writeSetBuildRefs e1 tbl) ^ (writeSetBuildRefs e2 tbl)
-|   S_Ref(_,_,fld, typ,_) -> "int __index_"^j_expr fld^"__ = "^ j_expr tbl ^".layout.getIdByName(\""^j_expr fld^"\");\n" 
-|   _ -> ""
 
 and writeAssign v e = match e with 
 	S_Call(f, es) -> 
 		(match f with 
 			"Read" -> v ^ ".readInput("^ j_expr e ^")" 
 		| 	_ ->  v ^ " = " ^ j_expr e)
+|   S_SetBuild(_,_,_,_) -> j_expr e ^";\n" ^ v ^ " = __tmp_tbl__;"
 |   _ -> v ^ " = " ^ j_expr e
 
 and elemForIO e = match e with S_Id("stdout", String) -> "IOUtils.stdout"
@@ -124,13 +126,13 @@ and writeVarDecl = function
 							  S_SetBuild(_,_,_,_) -> j_expr e' ^"\n" ^ j_obj_data_type d ^ " " ^ v ^ " = __tmp_tbl__;"
 							| _ -> j_obj_data_type d ^ " " ^ j_expr e ^ ";")
 						| _ -> j_obj_data_type d ^ " " ^ j_expr e ^ ";")
-|   S_ListDecl(d, e) -> "ArrayList<" ^ j_obj_data_type d ^ "> " ^ j_expr e ^ ";"
+|   S_ListDecl(d, e) ->  j_obj_data_type d ^ " " ^ j_expr e ^ ";"
 |   S_LayoutDecl(d, e) -> j_obj_data_type d ^ " " ^ j_expr e ^ ";"
 
 and writeBinOp e1 o e2 = 
 	match o with 
-	Equal -> j_expr e1 ^".equals("^j_expr e2^")" 
-	| Neq -> "!" ^ j_expr e1 ^".equals("^j_expr e2^")" 
+	Equal -> j_expr e1 ^".equals("^j_expr e2^") " 
+	| Neq -> "!" ^ j_expr e1 ^".equals("^j_expr e2^") " 
 	| _ -> j_expr e1 ^ 
 		(match o with Add -> "+" | Sub -> "-" | Mult -> "*" |
 				  Div -> "/" |  
@@ -139,7 +141,7 @@ and writeBinOp e1 o e2 =
 				  | And -> "&&" | Or -> "||" ) ^ j_expr e2
 
 and writeListRef e1 r e2 typ = match e2 with
-					 	S_Slice(es1, es2) ->"new ArrayList<"  ^ j_obj_data_type typ ^ ">(" ^ 
+					 	S_Slice(es1, es2) ->"new FRYList<"  ^ j_obj_data_type typ ^ ">(" ^ 
 					 						 j_expr e1 ^ ".subList(" ^ 
 					 						(match es2 with 
 					 						  S_Noexpr -> j_expr e2 ^ ", " ^ j_expr e1 ^ ".size()"
@@ -152,16 +154,16 @@ and writeLayRef e1 r e2 typ inSetBuild =
 		j_expr e1 ^ "." ^ j_expr e2
 	else
 	(match typ with
-		Int -> 	"Integer.parseInt("
-	|   Float -> "Float.parseFloat("
-	|   Bool -> "Boolean.parseBoolean("
-	|   _ -> "(" )
-		 ^ j_expr e1 ^"["^inSetBuild^".layout.getIdByName(\""^j_expr e2^"\")])"
+		Int -> 	"(new Integer(Integer.parseInt("
+	|   Float -> "(new Float(Float.parseFloat("
+	|   Bool -> "(new Boolean(Boolean.parseBoolean("
+	|   _ -> "(((" )
+		 ^ j_expr e1 ^"["^inSetBuild^".layout.getIdByName(\""^j_expr e2^"\")])))"
 
 and j_stmt = function
-	S_Block(syms,ss) -> "{\n" ^ String.concat "\n" ( List.rev (List.map j_stmt ss)) ^ "\n}"	
-| 	S_Expr(e,t) -> j_expr e ^ ";"
-|   S_Return(e,t) -> "return " ^ j_expr e ^";"
+	S_Block(_,ss) -> "{\n" ^ String.concat "\n" ( List.rev (List.map j_stmt ss)) ^ "\n}"	
+| 	S_Expr(e,_) -> j_expr e ^ ";"
+|   S_Return(e,_) -> "return " ^ j_expr e ^";"
 | 	S_If(elif_l, s) -> writeIf elif_l s 
 | 	S_For(e1, e2, s) -> writeForLoop e1 e2 s
 | 	S_While(e, s) -> writeWhileLoop e s
@@ -173,12 +175,12 @@ and j_fdecl (f: s_func_decl) = "public static " ^ j_obj_data_type f.ret_type ^ "
 	
 and writeFormal (v: s_var_decl) = match v with
 	S_BasicDecl(d, e) -> j_obj_data_type d ^ " " ^ j_expr e
-|   S_ListDecl(d, e) -> "ArrayList<" ^ j_obj_data_type d ^ "> " ^ j_expr e
+|   S_ListDecl(d, e) -> "FRYList<" ^ j_obj_data_type d ^ "> " ^ j_expr e
 |   S_LayoutDecl(d, e) -> j_obj_data_type d ^ " " ^ j_expr e 
 
 and j_layout (layout: string * s_var_decl list) = 
 	let (name, v_decs) = layout in
-	"private static class " ^ name ^ " extends FRYLayout{\n" ^ String.concat "\n" (List.rev (List.map writeVarDecl v_decs)) ^
+	"public static class " ^ name ^ " extends FRYLayout{\n public " ^ String.concat "\npublic " (List.rev (List.map writeVarDecl v_decs)) ^
 	j_layout_constructor v_decs name ^
 	j_toString v_decs ^
 	"}"
@@ -186,16 +188,16 @@ and j_layout (layout: string * s_var_decl list) =
 and j_layout_constructor (v_decs: s_var_decl list) (name: string) = 
 "\npublic " ^ name ^ "(" ^ String.concat "," (List.rev (List.map writeFormal v_decs)) ^ ")" ^ 
 "{\n\n super();\n" ^ String.concat ";\n" (List.map (fun v_dec -> let v_name = (match v_dec with 	
-	S_BasicDecl(d, e) 
-|   S_ListDecl(d, e) 
-|   S_LayoutDecl(d, e) -> j_expr e) in "this." ^ v_name ^ "=" ^ v_name) v_decs) ^
+	S_BasicDecl(_, e) 
+|   S_ListDecl(_, e) 
+|   S_LayoutDecl(_, e) -> j_expr e) in "this." ^ v_name ^ "=" ^ v_name) v_decs) ^
 ";}\n" ^
 "public " ^ name ^ "(){\nsuper();}"
 
 and j_toString (v_decs: s_var_decl list) =
 "\npublic String toString(){\nreturn " ^ 
 String.concat "+\"|\"+" (List.rev (List.map (fun v_dec -> let vname = (match v_dec with 	
-	S_BasicDecl(d, e) 
-|   S_ListDecl(d, e) 
-|   S_LayoutDecl(d, e) -> j_expr e) in vname ^".toString()") v_decs))
+	S_BasicDecl(_, e) 
+|   S_ListDecl(_, e) 
+|   S_LayoutDecl(_, e) -> j_expr e) in vname ^".toString()") v_decs))
 ^ ";\n}"

@@ -26,8 +26,13 @@ frame=tb,                         % Any extra options here
 showstringspaces=false,            
 breaklines=true
 }
+\usepackage{titlesec}
+\setcounter{secnumdepth}{4}
 
-
+\titleformat{\paragraph}
+{\normalfont\normalsize\bfseries}{\theparagraph}{1em}{}
+\titlespacing*{\paragraph}
+{0pt}{3.25ex plus 1ex minus .2ex}{1.5ex plus .2ex}
 
 \title{FRY Language Reference}
 \author{Tom DeVoe \\ tcd2123@columbia.edu}
@@ -38,14 +43,14 @@ breaklines=true
 
 \tableofcontents
 
-\section{Introduction}
+\subsection{Introduction}
 This document serves as a reference manual for the \textbf{FRY} Programming Language. \textbf{FRY} is a language designed for processing delimited text files.
 
 
-\section{Lexical Conventions}
-% In C sections are Tokens, Comments, Identifiers, Keywords, Constants
+\subsection{Lexical Conventions}
+% In C subsections are Tokens, Comments, Identifiers, Keywords, Constants
 
-\subsection{Comments}
+\subsubsection{Comments}
 Single line comments are denoted by the character, \texttt{\#}. Multi-line comments are opened with \texttt{\#/} and closed with \texttt{/\#}. 
 \\
 \\
@@ -55,10 +60,10 @@ Single line comments are denoted by the character, \texttt{\#}. Multi-line comme
 \texttt{\#/ This is a 
 \\
 				multi-line comment /\#}
-\subsection{Identifiers}
+\subsubsection{Identifiers}
 An identifier is a string of letters, digits, and underscores. A valid identifier begins with an letter or an underscore. Identifiers are case-sensitive and can be at most 31 characters long.
 
-\subsection{Keywords}
+\subsubsection{Keywords}
 
 The following identifiers are reserved and cannot be used otherwise:
 
@@ -73,7 +78,7 @@ false
 \end{tabular}
 }
 
-\subsection{Constants}
+\subsubsection{Constants}
 \label{sec:const}
 There is a constant corresponding to each Primitive data type mentioned in \ref{sec:prims}.
 
@@ -96,13 +101,13 @@ There is a constant corresponding to each Primitive data type mentioned in \ref{
 
 \end{itemize}
 
-\section{Syntax Notation}
+\subsection{Syntax Notation}
 Borrowing from the \emph{The C Programming Language} by Kernigan and Ritchie, syntactic categories are indicated by \emph{italic} type and literal words and characters in \texttt{typewriter} style. Optional tokens will be underscored by \textsubscript{\emph{opt}}.
 
-\section{Meaning of Identifiers}
-\subsection{Types}
+\subsection{Meaning of Identifiers}
+\subsubsection{Types}
 \label{sec:types}
-\subsubsection{Basic Types}
+\paragraph{Basic Types}
 \label{sec:prims}
 \begin{itemize}
 \item \texttt{int} - 64-bit signed integer value
@@ -111,7 +116,7 @@ Borrowing from the \emph{The C Programming Language} by Kernigan and Ritchie, sy
 \item \texttt{bool} - A boolean value. Can be either \texttt{true} or \texttt{false}
 \end{itemize}
 
-\subsubsection{Compound Types}
+\paragraph{Compound Types}
 
 \begin{itemize} 
 
@@ -123,9 +128,9 @@ Borrowing from the \emph{The C Programming Language} by Kernigan and Ritchie, sy
 
 \end{itemize}
 
-\section{Conversions}
+\subsection{Conversions}
 Certain operators can cause different basic data types to be converted between one another.
-\subsection{Integer and Floating}
+\subsubsection{Integer and Floating}
 Integer and Floating point numbers can be converted between each other by simply creating a new identifier of the desired type and assigning the variable to be converted to that identifier. For example, to convert an integer to a floating point number:
 \begin{lstlisting}
 int i = 5
@@ -140,7 +145,7 @@ int i = f
 Write(stdout, i)
 # 5
 \end{lstlisting}
-\subsection{Arithmetic Conversions}
+\subsubsection{Arithmetic Conversions}
 For any binary operator with a floating point and an integer operator, the integer will be promoited to a float before the operation is performed.
 \begin{lstlisting}
 float f = 5.25
@@ -150,19 +155,19 @@ Write(stdout, f*i)
 Write(stdout, f-i)
 # 3.25
 \end{lstlisting}
-\subsection{String Conversions}
+\subsubsection{String Conversions}
 % Automatic conversions when concatenating int,float with string
 String conversions are automatically performed when a non-string variable is concatenated with a string variable. 
 
-\section{Expressions}
+\subsection{Expressions}
 \label{sec:expr}
 % Describes precedence of expression operators 
 % Different types of expressions (Primary expression - a + b ; Postfix Expression - a++, etc.)
 % Function Calls, Structure Referenxces (struct, union)
 % Multiplicative/Additive Operators, conditional or, comma operator, etc. (other operators)
-An expression in \textbf{FRY} is a combination of variables, operators, constants, and functions. The list of expressions below are listed in order of precedence. Every expression in a subsection shares the same precedence (ex. Identifiers and Constants have the same precedence).
+An expression in \textbf{FRY} is a combination of variables, operators, constants, and functions. The list of expressions below are listed in order of precedence. Every expression in a subsubsection shares the same precedence (ex. Identifiers and Constants have the same precedence).
 %% TODO: Add more to intro %%
-\subsection{Primary Expressions}
+\subsubsection{Primary Expressions}
 \begin{itshape}
 \begin{tabbing}
 	\= prima\=ry-expression : \\
@@ -173,14 +178,14 @@ An expression in \textbf{FRY} is a combination of variables, operators, constant
 \end{itshape}
 
 Primary Expressions are either identifiers, constants, or parenthesized expressions. 
-\subsubsection{Identifiers}
+\paragraph{Identifiers}
 Identifiers types are specified during declaration by preceding that identifier by its type.  Identifiers can be used for any primitive or compound data types and any functions. 
-\subsubsection{Literal}
+\paragraph{Literal}
 Literals are either integer, string, float, or boolean constants as specified in \ref{sec:const}
-\subsubsection{Parenthesized Expressions}
+\paragraph{Parenthesized Expressions}
 Parenthesized expression is simply an expression surrounded by parentheses. 
 
-\subsection{Set Builder Expressions}
+\subsubsection{Set Builder Expressions}
 \label{sec:setbuild}
 \begin{tabbing}
 	\= \emph{set-bu}\=\emph{ild-expression}: \\
@@ -200,7 +205,7 @@ A set-build-expression consists of a \emph{return-layout}, which is the format o
 \end{tabbing}
 The \emph{return-layout} must be a Layout type, and can be either a Layout \emph{identifier} or a \emph{Layout-instance-list} as described in \ref{sec:layout}.
 
-\subsection{Postfix Expression}
+\subsubsection{Postfix Expression}
 Operators in a postfix expression are grouped from left to right.
 \begin{itshape}
 \begin{tabbing}
@@ -224,20 +229,20 @@ Operators in a postfix expression are grouped from left to right.
 \end{itshape}
 
 
-\subsubsection{List Element Reference}
+\paragraph{List Element Reference}
 A list identifier followed by square brackets with an integer-valued expression inside denotes referencing the element at that index in the List. For instance \lstinline!MyLst[5]! would reference the $6^\mathrm{th}$ element of the List, \emph{MyLst}. Similarly, \lstinline!MyLst[n]! would reference the $n-1^\mathrm{th}$ element of MyLst. The type of this element is the same as the type of elements the List you are accessing contains. \\
 Sublists can be returned by \emph{slicing} the list. By specifying the optional colon (':') and indices before and/or after, the list is sliced and a sublist of the original list is returned. If there is an integer before the semi-colon and none after, then a sublist is returned spanning from the integer to the end of the list. If there is an integer after the colon and none before, the a sublist is returned spanning from the beginning of the list to the integer index. If there is an integer before and after the colon, then a sublist is returned spanning from the first integer index to the second integer index.
 
-\subsubsection{Layout Element Reference}
+\paragraph{Layout Element Reference}
 \label{sec:layoutref}
 A layout identifier followed by a dot and an expression in braces ${ }$ references an element of a layout. The expression in the braces must either be \emph{(i)} the name of one of the member elements in the Layout you are accessing, such as \lstinline!MyLyt.{elem_name}! or \emph{(ii)} a integer reference to the $n^\mathrm{th}$ element of the Layout, i.e. \lstinline!MyLyt.{2}! would access the $1^\mathrm{st}$ member element. The type of the element returned will be the type that element was defined to be when the Layout was defined. If the member element you are accessing is itself a Layout, then the numeric and identifier references will both return a element of that Layout type. 
 
-\subsubsection{\emph{expression}$--$}
+\paragraph{\emph{expression}$--$}
 The double minus sign ('-') decrements an integer value by 1. The type of this expression must be integer.
-\subsubsection{\emph{expression}$++$}
+\paragraph{\emph{expression}$++$}
 The double plus sign ('+') increments an integer value by 1. The type of this expression must be integer.
 
-\subsection{Prefix Expressions}
+\subsubsection{Prefix Expressions}
 Unary operators are grouped from right to left and include logical negation, incrementation, and decrementation operators.
 \begin{tabbing}
 	\= \emph{pre}\=\emph{fix-expression :} \\
@@ -245,10 +250,10 @@ Unary operators are grouped from right to left and include logical negation, inc
 		\>\> \texttt{not} \emph{unary-expression}\\
 \end{tabbing}
 
-\subsubsection{\texttt{not} \emph{expression}}
+\paragraph{\texttt{not} \emph{expression}}
 The \texttt{not} operator represents boolean negation. The type of the expression must be boolean.
 
-\subsection{Multiplicative Operators}
+\subsubsection{Multiplicative Operators}
 These operators are grouped left to right.
 \begin{itshape}
 \begin{tabbing}
@@ -261,7 +266,7 @@ These operators are grouped left to right.
 
 $*$ denotes mutltiplication, $/$ denotes division, and $\%$ returns the remainder after division (also known as the modulo). The expressions on either side of these operators must be integer or floating point expressions. If the operand of $/$ or $\%$ is 0, the result is undefined.
 
-\subsection{Additive Operators}
+\subsubsection{Additive Operators}
 These operators are grouped left to right.
 \begin{itshape}
 \begin{tabbing}
@@ -274,7 +279,7 @@ These operators are grouped left to right.
 
 $+$ and $-$ denote addition and subtraction of the two operands respectively. Additionally the $+$ also denotes string concatenation. For $-$, the expressions on either side of the operators must be either integer or floating point valued. For $+$, the expressions can be integer, floating point or strings. Both operands must be strings or both operands must be float/int. You cannot mix string operands with numeric operands.
 
-\subsection{Relational Operators}
+\subsubsection{Relational Operators}
 \begin{itshape}
 \begin{tabbing}
 	\= relat\=ional-expression : \\
@@ -288,7 +293,7 @@ $+$ and $-$ denote addition and subtraction of the two operands respectively. Ad
 
 $>$ represents greater than, $>=$ represents greater than or equal to, $<$ represents less than, and $<=$ represents less than or equal to. These operators all return a boolean value corresponding to whether the relation is \texttt{true} or \texttt{false}. The type of each side of the operator should be either integer or floating point.
 
-\subsection{Equality Operators}
+\subsubsection{Equality Operators}
 \begin{itshape}
 \begin{tabbing}
 	\= equa\=lity-expression : \\
@@ -299,7 +304,7 @@ $>$ represents greater than, $>=$ represents greater than or equal to, $<$ repre
 \end{itshape}
 The $==$ operator compares the equivalence of the two operands and returns the boolean value \texttt{true} if they are equal, \texttt{false} if they are not. $!=$ does the opposite, \texttt{true} if they are unequal, \texttt{false} if they are equal. This operator compares the value of the identifier, not the reference for equivalence. The operands can be of any type, but operands of two different types will never be equivalent.
 
-\subsection{Logical AND Operator}
+\subsubsection{Logical AND Operator}
 The logical AND operator is grouped left to right.
 \begin{tabbing}
 	\= \emph{logi}\=\emph{cal-AND-expression} : \\
@@ -308,7 +313,7 @@ The logical AND operator is grouped left to right.
 \end{tabbing}
 The logical \emph{and} operator (\texttt{and}) only allows for boolean valued operands. This operator returns the boolean value true if both operands are true and false otherwise. 
 
-\subsection{Logical OR Operator}
+\subsubsection{Logical OR Operator}
 The logical OR operator is grouped left to right.
 \begin{tabbing}
 	\= \emph{logi}\=\emph{cal-OR-expression} : \\
@@ -317,7 +322,7 @@ The logical OR operator is grouped left to right.
 \end{tabbing}
 The logical \emph{or} operator (\texttt{or}) only allows for boolean valued operands. This operator returns the boolean false if both operands are false and true otherwise.
 
-\subsection{Assignment Expressions}
+\subsubsection{Assignment Expressions}
 Assignment operators are grouped right to left.
 \begin{itshape}
 \begin{tabbing}
@@ -328,7 +333,7 @@ Assignment operators are grouped right to left.
 \end{itshape}
 Assignment operators expect a variable identifier on the left and a constant or variable of the same type on the right side.
 
-\subsection{Function Calls}
+\subsubsection{Function Calls}
 \begin{itshape}
 \begin{tabbing}
 	\= fun\=c-call : \\
@@ -338,7 +343,7 @@ Assignment operators expect a variable identifier on the left and a constant or 
 \end{itshape}
 A function call consists of a function identifer, followed by parentheses with a possibly empty argument list contained. A copy is made of each object passed to the function, so the value of the original object will remained unchanged. Function declarations are discussed in \ref{sec:funcdec}.
 
-\subsection{List Initializers}
+\subsubsection{List Initializers}
 \begin{tabbing}
 	\=\emph{lis}\=\emph{t-initializer} : \\
 		\>\> \emph{func-call} \\
@@ -353,7 +358,7 @@ A function call consists of a function identifer, followed by parentheses with a
 \end{tabbing}
 A list initializer generates a list containing a range of values. The first form creates a list containing the values specified in the \emph{list-initializer-list}. Every element of the \emph{list-initializer-list} needs to be of the same type or an exception is thrown at compile time. The second form takes two integer values and returns an inclusive list containing the values from the first integer to the second. The first integer must be smaller than the second integer.
 
-\subsection{Layout Initializer}
+\subsubsection{Layout Initializer}
 \begin{tabbing}
 	\= \emph{lay}\=\emph{out-initializer} : \\
 		\>\> \emph{list-initializer} \\
@@ -367,7 +372,7 @@ A list initializer generates a list containing a range of values. The first form
 \end{tabbing}
 A layout initializer creates an instance of the layout type specified. The type of each layout initializer field needs to match those defined in the layout.
 
-\subsection{Table Initializer}
+\subsubsection{Table Initializer}
 \begin{tabbing}
 	\= \emph{tab}\=\emph{le-initializer} : \\
 		\>\> \emph{layout-initializer} \\
@@ -376,13 +381,13 @@ A layout initializer creates an instance of the layout type specified. The type 
 
 A Table initializer, initializes a table and optionally associates a layout with that table. \emph{full-type} is described in detail in \ref{sec:type_decls}
 
-\subsection{Expressions}
+\subsubsection{Expressions}
 \begin{tabbing}
 	\= \emph{exp}\=\emph{ression} : \\
 		\>\> \emph{table-initializer} 
 \end{tabbing}
-\section{Declarations}
-\subsection{Type Specifiers}
+\subsection{Declarations}
+\subsubsection{Type Specifiers}
 \label{sec:type_decls}
 The different type specifiers available are:
 
@@ -401,7 +406,7 @@ The different type specifiers available are:
 		\>\> \texttt{Layout} \emph{identifier} 
 \end{tabbing}
 
-\subsection{Variable Declarations}
+\subsubsection{Variable Declarations}
 \begin{tabbing}
 	\= \emph{vari}\=\emph{able-declaration} : \\
 		\> \> \emph{full-type} \emph{declarator} 
@@ -414,7 +419,7 @@ The different type specifiers available are:
 \end{tabbing}
 When assigning a value in a variable declaration, the type of the identifier in \emph{full-type} must match that of the \emph{expr} which it is assigned.
 
-\subsection{Layout Declarations}
+\subsubsection{Layout Declarations}
 \label{sec:layout}
 A Layout is a collection of optionally named members of various types.
 \begin{tabbing}
@@ -445,7 +450,7 @@ Layout creations have a few special rules:
 \end{itemize}
 
 
-\subsection{Function Declarations}
+\subsubsection{Function Declarations}
 \label{sec:funcdec}
 Function declarations are created along with their definition and have the following format:
 \begin{tabbing}
@@ -466,7 +471,7 @@ These arguments must be passed with the function whenever it is called.
 
 After the arguments comes the function definition inside of curly braces. The definition can contain any number statements, expressions, and declarations. The one caveat is the definition must contain a \emph{ret} statement for the return type indicated. If the function does not need to return a value, it is a best practice to return an int as the error code. You can \textbf{overload} functions, meaning you can have multiple functions with the same name, so long as they have different signatures.
 
-\section{Statements}
+\subsection{Statements}
 % Expression Statements, Flow Control, Iteration Stmt (for, while)
 % Big one is list comprehension syntax
 Unless otherwise described, statements are executed in sequence. Statements should be ended by a semi-colon(";"). Statements can be broken up into the following:
@@ -492,7 +497,7 @@ Statements are separated by newlines and a series of statements will be called a
 \end{tabbing}
 
 
-\subsection{Expression Statements}
+\subsubsection{Expression Statements}
 Expressions statements make up the majority or statements:
 
 \begin{itshape}
@@ -504,7 +509,7 @@ Expressions statements make up the majority or statements:
 
 An expression statement is made up of one or more expressions as defined in \ref{sec:expr}. After the entire statement is evaluated and all effects are completed, then the next statement is executed.
 
-\subsection{Return Statement}
+\subsubsection{Return Statement}
 \begin{tabbing}
 	\= \emph{ret}\=\emph{urn-statements} : \\
 		\>\> \texttt{ret} \emph{expr}
@@ -512,7 +517,7 @@ An expression statement is made up of one or more expressions as defined in \ref
 
 A return statement is included in a function and indicates the value to be returned by that function. This expr needs to have the same type as defined in the function declaration.
 
-\subsection{Statement Block}
+\subsubsection{Statement Block}
 \begin{tabbing}
 	\= \emph{stat}\=\emph{ement-block} : \\
 		\>\> \texttt{\{} \emph{statement-list} \texttt{\}}
@@ -520,7 +525,7 @@ A return statement is included in a function and indicates the value to be retur
 
 A statement block groups multiple statements together. Any variable declared in a statement block is only in scope until that statement block is closed.
 
-\subsection{Conditional Statements}
+\subsubsection{Conditional Statements}
 Conditional statements control the flow of a program by performing different sets of statements depending on some boolean value. 
 
 \begin{tabbing}
@@ -536,7 +541,7 @@ Conditional statements control the flow of a program by performing different set
 
 The expression in the parentheses after \texttt{if}, \texttt{elif}, and \texttt{else} must be boolean-valued. If it is true, execute the corresponding statement and jump out of the conditional expression. If it is false, do not execute the statement and evaluate the next expression after an \texttt{elif} or \texttt{else}.
 
-\subsection{Iterative Statements}
+\subsubsection{Iterative Statements}
 
 \begin{tabbing}
 	\= \emph{iter}\=\emph{ative-statements}: \\
@@ -544,16 +549,16 @@ The expression in the parentheses after \texttt{if}, \texttt{elif}, and \texttt{
 	\> \> \texttt{while (} \emph{expression} \texttt{)} \emph{statement}
 \end{tabbing}
 
-\subsubsection{for loop}
+\paragraph{for loop}
 
 The type of the expression following the left arrow ("<-") must be a list. A \emph{for} loop executes the \emph{statement} once for each elements in that List. 
 
-\subsection{while loop}
+\subsubsection{while loop}
 
 The \emph{expression} inside of the parentheses of a while loop must be boolean-valued. The while loop repeatedly executes the \emph{statement-list} as long as the value of the expression is \texttt{true}.
 
-\section{Scope}
-Scope is handled simply in \textbf{FRY}, a variable cannot be referenced outside of the code block it was declared inside. In most cases, this block is denoted by curly braces. One exception is the \emph{elements-of} section of a Set-builder statements \ref{sec:setbuild}, the scope for these variables are only inside the Set Builder statement (i.e. inside the square brackets). Any variable delcared outside of any code block is considered a global variable and can be referenced anywhere in the program.
+\subsection{Scope}
+Scope is handled simply in \textbf{FRY}, a variable cannot be referenced outside of the code block it was declared inside. In most cases, this block is denoted by curly braces. One exception is the \emph{elements-of} subsection of a Set-builder statements \ref{sec:setbuild}, the scope for these variables are only inside the Set Builder statement (i.e. inside the square brackets). Any variable delcared outside of any code block is considered a global variable and can be referenced anywhere in the program.
 
 
 \end{document}

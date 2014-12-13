@@ -15,6 +15,7 @@
 %nonassoc NOELSE
 %nonassoc ELSE
 %right ASSIGN
+%left LBRACK
 %left OR
 %left AND
 %left EQ NEQ
@@ -89,7 +90,7 @@ logical_AND_expr:
 
 logical_OR_expr:
 	logical_AND_expr { $1 }
-|   expr OR expr    { Binop($1, Or, $3) }
+|   logical_AND_expr OR logical_OR_expr    { Binop($1, Or, $3) }
 
 assign_expr:
 	logical_OR_expr { $1 }
@@ -113,8 +114,8 @@ layout_lit:
 |	LAYOUT ID LBRACE layout_lit_list RBRACE	{ LayoutLit(Layout($2), $4) }
 
 layout_lit_list:
-	list_initializer	{ [$1] }
-|	layout_lit_list COMMA list_initializer { $3::$1 }
+	layout_lit	{ [$1] }
+|	layout_lit_list COMMA layout_lit { $3::$1 }
 
 table_initializer:
 	layout_lit { $1 }

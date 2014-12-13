@@ -1,0 +1,10 @@
+Layout in_layout = { int: id, str: fname, str: lname, str: city, str: state };
+
+Table tbl = Table (Layout in_layout);
+
+tbl = Read("in.txt",",");
+
+Table out = [ i | i <- tbl; i.{state} != "NJ" ];
+
+Write("out.txt",out);
+

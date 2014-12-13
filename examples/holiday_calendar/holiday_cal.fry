@@ -1,0 +1,38 @@
+
+bool isValidDate(str mon, int day){
+  if ( day > 28 and mon == "Feb"){
+    ret false;
+  }
+  if ( day == 31 ){
+    if ( mon == "Sep" or mon == "Apr" or mon == "Jun" or mon == "Nov"){
+      ret false;
+    }
+    else {
+      ret true;
+    }
+  }
+  ret true;
+}
+
+Layout date = {str: mon, int: day, int: year, str: holiday};
+
+Table holidays = Table (Layout date);
+holidays = Read("holidays.txt",",");
+
+str holiday_name;
+Table calendar = Table (Layout date);
+str List holiday_list; 
+Table matching_days;
+
+for ( mon <- [ "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" ]){
+  for ( day <- [ 1 to 31 ]) {
+    if(isValidDate(mon, day)){
+        matching_days = [ i | i <- holidays; i.{mon} == mon and i.{day} == day ];
+        holiday_list = Column(matching_days, "holiday");
+        holiday_name = holiday_list[0];
+        Append(calendar, Layout date {mon, day, 2015,holiday_name});
+    }
+  }
+}
+
+Write("holiday-calendar.txt", calendar);

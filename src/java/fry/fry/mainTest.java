@@ -1,41 +1,71 @@
-package fry;
-
-import java.util.ArrayList;
-import java.util.Arrays;
+package fry;import java.util.Arrays;
 import java.io.IOException;
+import java.util.ArrayList;
 public class mainTest{
-private static class in_layout extends FRYLayout{
-Integer id;
-String fname;
-String lname;
-String city;
-String state;
-public in_layout(Integer id,String fname,String lname,String city,String state){
+public static class date extends FRYLayout{
+ public String mon;
+public Integer day;
+public Integer year;
+public String holiday;
+public date(String mon,Integer day,Integer year,String holiday){
 
  super();
-this.state=state;
-this.city=city;
-this.lname=lname;
-this.fname=fname;
-this.id=id;}
-public in_layout(){
+this.holiday=holiday;
+this.year=year;
+this.day=day;
+this.mon=mon;}
+public date(){
 super();}
 public String toString(){
-return id.toString()+"|"+fname.toString()+"|"+lname.toString()+"|"+city.toString()+"|"+state.toString();
-}}
+return mon.toString()+"|"+day.toString()+"|"+year.toString()+"|"+holiday.toString();
+}}public static Boolean isValidDate(String mon,Integer day) {
+if ( day>28&&mon.equals("Feb") )
+{
+return false;
+}
+
+if ( day.equals(31) )
+{
+if ( mon.equals("Sep") ||mon.equals("Apr") ||mon.equals("Jun") ||mon.equals("Nov") )
+{
+return false;
+}
+else
+{
+return true;
+}
+
+}
+
+return true;}
 
 public static void main(String[] args) throws IOException{
 ;
-FRYTable tbl = new FRYTable( new in_layout() );
-tbl.readInput(IOUtils.Read("C://Users//tdevoe//Documents//Columbia//FRY-lang//examples//filter//in.txt", ","));
-ArrayList<String[]>  __ret_data__ = new ArrayList<String[]>(tbl.getData().size());
-for(String[] i : tbl.getData()){
-int __index_state__ = tbl.layout.getIdByName("state");
+FRYTable holidays = new FRYTable( new date() );
+holidays.readInput(IOUtils.Read("C://Users//tdevoe//Documents//Columbia//FRY-lang//examples//holiday_calendar//holidays.txt", ","));
+String holiday_name;
+FRYTable calendar = new FRYTable( new date() );
+FRYList<String> holiday_list;
+FRYTable matching_days;
+for (String mon: new ArrayList<String>(Arrays.asList(new String("Jan"), new String("Feb"), new String("Mar"), new String("Apr"), new String("May"), new String("Jun"), new String("Jul"), new String("Aug"), new String("Sep"), new String("Oct"), new String("Nov"), new String("Dec")))) {
+{
+for (Integer day: FRYListFactory.getGeneratedFryList(1,31)) {
+{
+if ( isValidDate(mon, day))
+{
+FRYList<String[]>  __ret_data__ = new FRYList<String[]>(holidays.getData().size());
+for(String[] i : holidays.getData()){
 
+if((((i[holidays.layout.getIdByName("mon")]))).equals(mon) &&(new Integer(Integer.parseInt(i[holidays.layout.getIdByName("day")]))).equals(day) ){ __ret_data__.add(i);}
+}FRYTable __tmp_tbl__  = new FRYTable(__ret_data__,holidays.layout);;
+matching_days = __tmp_tbl__;;
+holiday_list = matching_days.getColumn("holiday");
+holiday_name = holiday_list.get(0);
+IOUtils.Append(calendar, new date (mon,day,2015,holiday_name));
+}
 
-if(!(i[tbl.layout.getIdByName("state")]).equals("NJ")){ __ret_data__.add(i);}
-}FRYTable __tmp_tbl__  = new FRYTable(__ret_data__,tbl.layout);
-FRYTable out = __tmp_tbl__;
-IOUtils.Write("C://Users//tdevoe//Documents//Columbia//FRY-lang//examples//filter//out.txt", out);
+}}
+}}
+IOUtils.Write("C://Users//tdevoe//Documents//Columbia//FRY-lang//examples//holiday_calendar//holiday-calendar.txt", calendar);
 }
 }

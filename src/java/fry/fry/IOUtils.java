@@ -103,6 +103,10 @@ public class IOUtils {
 		o.close();
 	}
 
+	public static void Append(FRYTable tbl, FRYLayout rec){
+		tbl.append(rec);
+	}
+	
 	public static InputFile Read(String inputSpec, String delim) throws IOException{
 		BufferedReader i = null;
 		// inputSpec should be stdin or string path to file

@@ -16,4 +16,4 @@ let _ =
 	 			let compiled_program = Javagen.j_prgm checked_program
 	 				in let file = open_out ("fry.java") in
    						fprintf file "%s"  compiled_program; 
-   						print_endline "Program compiled to java/fry.java"
+   						print_endline "Program compiled to fry.java"

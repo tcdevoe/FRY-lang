@@ -18,6 +18,7 @@ public class FRYTable {
 		layout = new FRYLayout();
 		isLayoutSet = false;
 		recIndex = 0;
+		data = new ArrayList<String[]>();
 	}
 	
 	 public ArrayList<String[]> getData() {
@@ -34,6 +35,7 @@ public class FRYTable {
 		this.layout = layout;
 		isLayoutSet = true;
 		recIndex = 0;
+		data = new ArrayList<String[]>();
 	}
 
 	public void readInput(InputFile i) throws IOException{
@@ -75,15 +77,16 @@ public class FRYTable {
 		return dat;
 	}
 	
-	public ArrayList<Object> getColumn(int i){
+	public FRYList<String> getColumn(int i){
 		String[] col = new String[data.size()];
-		for(int j = 0; j < data.size(); j++){
+		for(int j = 0; j < data.get(0).length; j++){
 			col[j] = data.get(j)[i];
 		}
-		return new ArrayList<Object>(Arrays.asList(col));
+		return new FRYList<String>(Arrays.asList(col));
 	}
 	
-	public ArrayList<Object> getColumn(String fieldName){
+	
+	public FRYList<String> getColumn(String fieldName){
 		return getColumn(layout.getIdByName(fieldName));
 	}
 	
@@ -93,7 +96,12 @@ public class FRYTable {
 		int i = 0;
 		for (Field field : fields){
 			try {
-				record[i] = (String) field.get(rec);
+					if (field.get(rec) == null){
+						record[i] = "";
+					}
+					else {
+						record[i] = field.get(rec).toString();
+					}
 			} catch (IllegalArgumentException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
