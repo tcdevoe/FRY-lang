@@ -1,7 +1,0 @@
-1,Tom,DeVoe,Wayne,NJ
-2,Eli,Manning,Hoboken,NJ
-3,George,Washington,Washington,DC
-4,Taranga,Leela,New York City,NY
-5,Abraham,Lincoln,Hodgenville,KY
-6,Phillip,Fry,New York City,NY
-7,Frodo,Baggins,Hobbiton,Shire

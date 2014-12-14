@@ -189,7 +189,11 @@ Append(Table tbl, Layout <type> lyt_instance)
 Where \emph{Layout $<$type$>$} is any defined FRY Layout type.
 
 \paragraph{Column}
-\textbf{Column} is a function which takes in a 
+\textbf{Column} is a function which takes in a Table and a column name or column number, and returns that column as a FRY List.
+\begin{lstlisting}
+Column(Table tbl, str column_name)
+Column(Table tbl, int column_number)
+\end{lstlisting}
 
 \subsection{Examples}
 \subsubsection{Generate Holiday Calendar}
@@ -761,6 +765,31 @@ A Fry program is just a collection of statements and and function declarations. 
 Scope is handled simply in \textbf{FRY}, a variable cannot be referenced outside of the code block it was declared inside. In most cases, this block is denoted by curly braces. One exception is the \emph{elements-of} subsection of a Set-builder statements \ref{sec:setbuild}, the scope for these variables are only inside the Set Builder statement (i.e. inside the square brackets). Any variable delcared outside of any code block is considered a global variable and can be referenced anywhere in the program.
 
 
+\section{Project Plan}
+\subsection{Process}
+\subsubsection{Specification}
+Specification for the FRY language came from the Language Proposal, and was further refined in the Language Reference Manual. With a bit of back and forth discussion and feedback with Prof. Edwards, the FRY language began to be more consistent and logical. Throughout development, if I realized one of the specifications was extremely difficult or impossible to achieve, I modified the specification to make more sense or be more easily achievable.
+\subsubsection{Development}
+Development of the FRY compiler started implementing a large portion of the parser and scanner as defined in the FRY LRM. Once programs were being parsed properly, I began writing the java generation code for some simple programs. This started initially with a simple program which added numbers together, then conditional statements, and so on. During this time, I also worked on the different Java classes as they were necessary. I continued to develop portions of the java generation to compile different programs. Once I had a significant set of programs compiled, I began work on the Semantic Analysis to properly check all of the programs I had developed. After the programs I had compiled were properly semantically analyzed, I started an iterative process of adding new functionality to the compiler (to all parts, Parser, Semantic Analyzer, and Java Code Generation).
+\subsubsection{Testing}
+The testing driver script (utils/run\_tests.sh) was added early on in the development process, so that tests could be added in easily. Every time a new feature was implemented, I added in a new test which verified that feature was working.
 
+\subsection{Programming Style Guide}
+As the entire compiler was written by myself, the project did not really have a concrete "style guide". Instead, as I became more comfortable coding in OCaml, I refined my style guide. Because of this, there are some inconsistencies in the style of the code throughout. Towards the end, there were a few rules I abided by:
+\begin{itemize}
+\item Functions should include the type of the arguments.
+\item Each \textbf{match}, \textbf{if}, and \textbf{let} block should begin on a new-line and be indented one level further then it's parent block.
+\end{itemize}
+
+\subsection{Project Timeline}
+Outside of the timelines given by the course, I simply went through an implemented as much as could as fast as I could. That being said, the general timeline looked something like this:
+\begin{itemize}
+\item \textbf{Sep 24} - Project Proposal Finished
+\item \textbf{Oct 25} - LRM Finished
+\item \textbf{Nov 9} - Scanner/Parser implemented (mostly) unambiguous
+\item \textbf{Nov 14} - Simple programs compiled to Java
+\item \textbf{Nov 16} - Testing framework created
+\item \textbf{Dec 14} - Most of the Language set up to implement is completed and implemented in compiler
+\end{itemize}
 
 \end{document}
