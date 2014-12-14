@@ -326,7 +326,7 @@ and check_set_build e1 id e2 e3 env : (s_expr * dataType) =
 
 let rec check_stmt (s: Ast.stmt) (env: translation_environment) = match s with
   Block(ss) ->	
-	print_sym_tbl env.scope;let scope' = { parent = Some(env.scope); variables = []; layouts = env.scope.layouts; tables = env.scope.tables; } in 
+	let scope' = { parent = Some(env.scope); variables = []; layouts = env.scope.layouts; tables = env.scope.tables; } in 
   				let env' = { env with scope = scope'} in
   				let ss = List.map (fun s -> check_stmt s env') (List.rev ss) in
   				scope'.variables <- List.rev scope'.variables;
@@ -442,7 +442,7 @@ and check_var_decl (v: var_decl) (env: translation_environment) =
 											env.scope.variables <- (List(typ), x, S_Noexpr)::env.scope.variables;
 	 										let (e',_) = check_expr e env in
 	 											env.scope.variables <- (List(typ), x, e')::env.scope.variables;
-												S_VarDecl(S_ListDecl(typ, S_Assign(x, e')))
+												S_VarDecl(S_ListDecl(List(typ), S_Assign(x, e')))
 								|  _ -> raise (Error ("Not a valid assignment")))
 	|   Layout(name) -> (match e with
 									Id(x) -> let exist = List.exists (fun (_, s, _) -> s = x) env.scope.variables in
@@ -499,8 +499,8 @@ let check_formals (decl: var_decl) (env: translation_environment) =
 	VarDecl(d,e) -> 
 	( 	match d with
 		List(typ) -> (match e with
-								Id(x) -> env.scope.variables <- (typ, x, S_Noexpr)::env.scope.variables;
-										 S_ListDecl(typ, S_Id(x, typ))
+								Id(x) -> env.scope.variables <- (d, x, S_Noexpr)::env.scope.variables;
+										 S_ListDecl(d, S_Id(x, d))
 							|   _ -> raise (Error("Function formals must be identifiers")))
 	|	Layout(name) -> (match e with
 								Id(x) -> env.scope.variables <- (Layout(name), x, S_Noexpr)::env.scope.variables;
@@ -518,7 +518,7 @@ let check_fdecl (func: Ast.func_decl) (env: translation_environment) : (s_func_d
 	else
 		let env' = { env with scope = {parent = Some(env.scope); variables = [(String, "stdout", S_Noexpr); (String, "stderr", S_Noexpr)]; layouts=env.scope.layouts; tables=env.scope.tables;}; 
 		return_type = func.ret_type; in_func = true} in 
-		let formals = (List.rev (List.map (fun x -> check_formals x env') func.formals)) in
+		let formals = (List.rev (List.map (fun x -> check_formals x env') func.formals)) in print_sym_tbl env'.scope;
 		let f = { Sast.fname = func.fname; Sast.ret_type = func.ret_type; Sast.formals = formals; Sast.body = (List.map (fun x -> check_stmt x env') func.body );} in
 		env.funcs <- f::env.funcs; f
 	   	

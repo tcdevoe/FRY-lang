@@ -5,8 +5,8 @@ import java.util.Arrays;
 
 public class FRYListFactory{
 
-	public static ArrayList<Integer> getGeneratedFryList(int min, int max){
-		ArrayList<Integer> list = new ArrayList<Integer>(max-min);
+	public static FRYList<Integer> getGeneratedFryList(int min, int max){
+		FRYList<Integer> list = new FRYList<Integer>(max-min);
 		for(int i = min; i <= max; i++){
 			list.add(new Integer(i));
 		}

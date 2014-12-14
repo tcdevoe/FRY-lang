@@ -46,7 +46,7 @@ and j_expr = function
 |   S_BoolLit(b) -> b
 | 	S_ListGen(e1, e2) -> "FRYListFactory.getGeneratedFryList(" ^ j_expr e1 ^ "," ^ j_expr e2 ^ ")"
 (* Should determine the data type in the check pass and add it to the constructor *)
-| 	S_ListLit(l, typ) -> "new ArrayList<"  ^ j_obj_data_type typ ^ ">(Arrays.asList(" ^ String.concat ", " (List.rev (List.map (fun e -> "new " ^ j_obj_data_type typ ^ "(" ^ j_expr e ^ ")") l)) ^ "))"
+| 	S_ListLit(l, typ) -> "new FRYList<"  ^ j_obj_data_type typ ^ ">(Arrays.asList(" ^ String.concat ", " (List.rev (List.map (fun e -> "new " ^ j_obj_data_type typ ^ "(" ^ j_expr e ^ ")") l)) ^ "))"
 |   S_Id(x,_) -> x
 |   S_Binop(e1, o, e2) -> writeBinOp e1 o e2 
 | 	S_Postop(e1, o) -> j_expr e1 ^ 
@@ -175,7 +175,7 @@ and j_fdecl (f: s_func_decl) = "public static " ^ j_obj_data_type f.ret_type ^ "
 	
 and writeFormal (v: s_var_decl) = match v with
 	S_BasicDecl(d, e) -> j_obj_data_type d ^ " " ^ j_expr e
-|   S_ListDecl(d, e) -> "FRYList<" ^ j_obj_data_type d ^ "> " ^ j_expr e
+|   S_ListDecl(d, e) -> j_obj_data_type d ^ " " ^ j_expr e
 |   S_LayoutDecl(d, e) -> j_obj_data_type d ^ " " ^ j_expr e 
 
 and j_layout (layout: string * s_var_decl list) = 

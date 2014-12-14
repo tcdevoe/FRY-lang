@@ -79,7 +79,7 @@ public class FRYTable {
 	
 	public FRYList<String> getColumn(int i){
 		String[] col = new String[data.size()];
-		for(int j = 0; j < data.get(0).length; j++){
+		for(int j = 0; j < data.size(); j++){
 			col[j] = data.get(j)[i];
 		}
 		return new FRYList<String>(Arrays.asList(col));
