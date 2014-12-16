@@ -1,9 +1,12 @@
 \documentclass{article}
+\usepackage{tikz}
+\usetikzlibrary{automata, arrows}
 \usepackage{titlesec}
 \usepackage{listings}
 \usepackage{color}
 \usepackage{hyperref}
 \usepackage{fixltx2e}
+
 
 % Default fixed font does not support bold face
 \DeclareFixedFont{\ttb}{T1}{txtt}{bx}{n}{10} % for bold
@@ -14,19 +17,8 @@
 \definecolor{deepgreen}{rgb}{0,0.5,0}
 \definecolor{codebg}{gray}{0.9}
 \definecolor{comment}{gray}{0.4}
+\newenvironment{allintypewriter}{\ttfamily}{\par}
 
-\lstset{
-backgroundcolor=\color{codebg},
-language=Python,
-basicstyle=\ttm,
-commentstyle=\color{comment}\ttm,
-otherkeywords={Join, Sort, delim, Read, Write, ret, Layout, List, Table, true, false },             % Add keywords here
-keywordstyle=\ttb\color{deepblue},
-stringstyle=\color{deepgreen},
-frame=tb,                         % Any extra options here
-showstringspaces=false,            
-breaklines=true
-}
 \setcounter{secnumdepth}{4}
 
 \titleformat{\paragraph}
@@ -41,10 +33,21 @@ breaklines=true
 \begin{document}
 \maketitle
 \tableofcontents 
-
+\lstset{
+backgroundcolor=\color{codebg},
+language=Python,
+basicstyle=\ttm,
+commentstyle=\color{comment}\ttm,
+otherkeywords={Join, Sort, delim, Read, Write, ret, Layout, List, Table, true, false },             % Add keywords here
+keywordstyle=\ttb\color{deepblue},
+stringstyle=\color{deepgreen},
+frame=tb,                         % Any extra options here
+showstringspaces=false,            
+breaklines=true
+}
 \section{Introduction}
 As data becomes cheaper to store and more readily available, there is a need for tools to process and analyze that data. While there are a wealth of languages and software which already accomplish this, FRY sets out to do so in an elegant, concise manner. The main goal is to allow users to quickly and easily define data transformations so that they can get the most information out of their data.
-At its core, FRY is an imperative, staticly-typed language built to process delimited text files. Once these delimited text files are read into a FRY program, a user can perform any number of transformations on this data using built-in or user defined functions, or using FRY's set-builder notation, which allows for concise statements to transform data. 
+At its core, FRY is an imperative, staticly-typed language built to process delimited text files. Once these delimited text files are read into a FRY program, you can perform any number of transformations on this data using built-in or user defined functions, or using FRY's set-builder notation, which allows for concise statements to transform data. 
 
 \section{Language Tutorial}
 \subsection{Basic Types}
@@ -198,7 +201,7 @@ Column(Table tbl, int column_number)
 \subsection{Examples}
 \subsubsection{Generate Holiday Calendar}
 \label{sec:cal_example}
-This example reads in a file with a list of holidays and generates a calendar with those holidays noted. "holidays.txt" is a comma delimited list of holidays along with the name of that holiday. "holidays.txt" looks like :
+This example reads in a file with a list of holidays and generates a calendar with those holidays noted. "holidays.txt" is a comma delimited list of holidays along with the name of that holiday. \textbf{"holidays.txt"} looks like :
 \begin{lstlisting}
 Jan,1,2015,New Years
 Jan,19,2015,MLK Day
@@ -211,7 +214,7 @@ Nov,11,2015,Veterans Day
 Nov,26,2015,Thanksgiving
 Dec,25,2015,Christmas Day
 \end{lstlisting}
-
+\textbf{holiday\_cal.fry}
 \begin{lstlisting}
 # Checks if the date is valid (i.e. no Feb 30th)
 bool isValidDate(str mon, int day){
@@ -254,7 +257,7 @@ for ( mon <- [ "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "O
 
 Write("holiday-calendar.txt", calendar);
 \end{lstlisting}
-The generated calendar file, "holiday-calendar.txt" looks like (where the "..." represents skipped records) :
+The generated calendar file, \textbf{"holiday-calendar.txt"} looks like (where the "..." represents unincluded records) :
 \begin{lstlisting}
 Jan,1,2015,New Years
 Jan,2,2015,
@@ -782,7 +785,7 @@ As the entire compiler was written by myself, the project did not really have a 
 \end{itemize}
 
 \subsection{Project Timeline}
-Outside of the timelines given by the course, I simply went through an implemented as much as could as fast as I could. That being said, the general timeline looked something like this:
+The approximate timeline for the project looked something like this:
 \begin{itemize}
 \item \textbf{Sep 24} - Project Proposal Finished
 \item \textbf{Oct 25} - LRM Finished
@@ -792,4 +795,265 @@ Outside of the timelines given by the course, I simply went through an implement
 \item \textbf{Dec 14} - Most of the Language set up to implement is completed and implemented in compiler
 \end{itemize}
 
+\subsection{Development Environment}
+The project was developed/built on an Ubuntu 14.04.1 LTS, Trusty Tahr virtual machine on my desktop. The entire project was source-controlled using Git and hosted on github.com. The compiler was written in OCaml and was developed using Sublime Text 3. The Java libraries which implemented the OCaml Data structures and built-in functions were developed in Eclipse. The bash testing driver script as well as all FRY programs written were written in ViM. Make was used to compile all of the OCaml and the Java was compiled automatically by Eclipse.
+
+\subsection{Project Log}
+I have had problems with my Laptop hard drive in the past and I did not want to lose my work, so I commited/pushed often, as you will notice with the amount of commits. Keep in mind, all documents were tracked in the Git repository as well so there a number of commits that are not code-related.
+\\ \\
+\begin{allintypewriter}
+09cb02e - (HEAD, origin/master, origin/HEAD, master) Final report project process being added (Sun Dec 14 17:02:29 2014 -0500) <Tom DeVoe>
+\\ \\
+f8b8ce1 - Fixed some issues with List, got Column function working, updated final report (Sun Dec 14 16:00:50 2014 -0500) <tcdevoe>
+\\ \\
+8773521 - Trying to add getColumn function, worked on Final Report (Sat Dec 13 17:44:19 2014 -0500) <Tom DeVoe>
+\\ \\
+6bba4ce - Cleaned up Language Reference for addition to Final Report (Wed Dec 10 23:17:19 2014 -0500) <Tom DeVoe>
+\\ \\
+ee1a423 - Getting rid of shift/reduce conflicts (Tue Dec 9 23:00:34 2014 -0500) <Tom DeVoe>
+\\ \\
+70150fb - Implemented Set builder notation (Tue Dec 9 16:58:49 2014 -0500) <Tom DeVoe>
+\\ \\
+64a915d - Implemented FRY Layout and FRY Table java classes (Sat Dec 6 18:38:56 2014 -0500) <Tom DeVoe>
+\\ \\
+a6a793a - Fixed function args issue, added function overloading (Thu Dec 4 00:29:58 2014 -0500) <Tom DeVoe>
+\\ \\
+3f48ce5 - Got Layout references working, need to fix functions that take args (Tue Dec 2 23:57:31 2014 -0500) <Tom DeVoe>
+\\ \\
+cc32d73 - Layout java generation and semantic analysis implemented, need to add reference (Mon Dec 1 23:56:17 2014 -0500) <Tom DeVoe>
+\\ \\
+fb8df36 - Added in Layout parsing, need to add semantic analysis/javagen support (Mon Dec 1 00:35:43 2014 -0500) <Tom DeVoe>
+\\ \\
+c04159d - Added in List references (Fri Nov 28 20:08:10 2014 -0500) <Tom DeVoe>
+\\ \\
+fb88eed - Merge branch 'master' of github.com:tcdevoe/FRY-lang (Tue Nov 25 23:34:20 2014 -0500) <Tom DeVoe>
+\\ \\
+4535996 - Lists, for loops, funcs, fully implemented/tested, All tests suceeding (Tue Nov 25 23:33:48 2014 -0500) <Tom DeVoe>
+\\ \\
+899eb57 - Create README.md (Mon Nov 24 23:41:29 2014 -0500) <tcdevoe>
+\\ \\
+0b86925 - Fixed parsing order - got mostly working check (Mon Nov 24 23:40:05 2014 -0500) <Tom DeVoe>
+\\ \\
+bdf1ad1 - Fixed path issue in run\_tests, fixed Makefile to work with SAST interface (Sat Nov 22 19:33:31 2014 -0500) <Tom DeVoe>
+\\ \\
+4193161 - Compiling semantic analysis - almost fully implemented (Thu Nov 20 23:24:32 2014 -0500) <Tom DeVoe>
+\\ \\
+7ff8d13 - Started implementing semantic analysis, added in some more tests and updated run\_tests.sh (Tue Nov 18 22:33:33 2014 -0500) <Tom DeVoe>
+\\ \\
+eee6eb6 - List generation syntax working (Mon Nov 17 23:41:31 2014 -0500) <Tom DeVoe>
+\\ \\
+adb160d - Updated run\_tests script and got If conditionals working (Sun Nov 16 23:19:43 2014 -0500) <Tom DeVoe>
+\\ \\
+17b6573 - Added initial testing script (Sun Nov 16 18:36:44 2014 -0500) <Tom DeVoe>
+\\ \\
+6023309 - Added IOUtils and Makefile for java src (Sat Nov 15 19:03:05 2014 -0500) <Tom DeVoe>
+\\ \\
+dc7fc21 - Simple compile to java (Fri Nov 14 19:57:17 2014 -0500) <Tom DeVoe>
+\\ \\
+1dcb46e - Reworked the expr grammar, reduced shift/reduce conflicts (Thu Nov 13 23:07:06 2014 -0500) <Tom DeVoe>
+\\ \\
+7c3de09 - Main Executable added, Parsing-printer added (Mon Nov 10 23:32:28 2014 -0500) <Tom DeVoe>
+\\ \\
+f4b4109 - Compiling mostly-finished scanner/parser - finishing debug printing (Sun Nov 9 23:32:07 2014 -0500) <Tom DeVoe>
+\\ \\
+a274640 - Merge branch 'master' of github.com:tcdevoe/FRY-lang (Sat Nov 8 15:07:53 2014 -0500) <tcdevoe>
+\\ \\
+3940d51 - Updating Docs Names (Sat Nov 8 15:07:46 2014 -0500) <tcdevoe>
+\\ \\
+2e1b77b - Working build, parser, scanner, ast made progress (Thu Nov 6 23:10:55 2014 -0500) <Tom DeVoe>
+\\ \\
+0c1227d - Finished LRM - still need to proofread (Sat Oct 25 22:28:56 2014 -0400) <tcdevoe>
+\\ \\
+a9c80c8 - Merge branch 'LanguageReference' (Thu Oct 23 23:55:40 2014 -0400) <tcdevoe>
+\\ \\
+d0c9368 - (LanguageReference) Finished up the Expressions section and finished ~half the declarations (Thu Oct 23 23:52:05 2014 -0400) <tcdevoe>
+\\ \\
+23d3811 - Working gen\_tokens.sh (Mon Oct 20 21:04:33 2014 -0400) <Tom DeVoe>
+\\ \\
+676a021 - Improved Language reference (Mon Oct 20 18:47:43 2014 -0400) <tcdevoe>
+\\ \\
+90f5191 - Updated Lanaguage Refrence on new branch (Mon Oct 20 17:50:07 2014 -0400) <tcdevoe>
+\\ \\
+d20a668 - Saved Corrupt Repo (Mon Oct 20 17:47:45 2014 -0400) <Tom DeVoe>
+\\ \\
+3f8569a - Update (Sun Oct 12 17:33:18 2014 -0400) <tcdevoe>
+\\ \\
+be27326 - Started adding in the language reference information (Wed Oct 8 23:04:36 2014 -0400) <tcdevoe>
+\\ \\
+2fad90c - Initial Commit - Commiting Documents (Wed Oct 8 21:47:37 2014 -0400) <tcdevoe>
+\end{allintypewriter}
+
+\section{Compiler Architecture}
+\begin{tikzpicture}[->,node distance=2 cm,
+                semithick, scale = 1.3, transform shape]
+        \node [draw, rectangle, thick]  (scanner) {Scanner};
+        \node [draw, rectangle, below of = scanner] (parser) {Parser};
+        \node [draw, rectangle, below of = parser] (semantic) {Semantic Analysis};
+        \node [draw, rectangle, below of = semantic] (javagen) {Java Code Generation};
+        \node [draw, rectangle, below of = javagen] (java) {Java Compiler};
+
+%% paths
+        \path
+		         (scanner) edge node [pos=0.5, right] {$\textbf{Tokens}$}  (parser)
+                    (parser) edge node [pos=0.5, right] {$\textbf{AST}$} (semantic) 
+                    (semantic) edge node [pos=0.5, right] {$\textbf{SAST}$}  (javagen)
+                    (javagen) edge  node [pos=0.5, right] {$\textbf{java}$} (java)
+                    ;
+\end{tikzpicture}
+\\ \\ 
+As is shown in the diagram, the FRY compiler is split into 4 sections, the Scanner, Parser, Semantic Analysis and Java Code Generation. 
+\subsection{Scanner} 
+Scans the input program and produces a tokenized output. The Scanner discards all whitespace and comments and reports an error if any invalid character sequences are encountered, such as an invalid identifier or escape sequence. The scanner was written for \texttt{ocamlyacc}.
+\subsection{Parser}
+Parses the tokenized output of the scanner and generates an \textbf{AST (Abstract Syntax Tree)} . The parser checks the syntax and catches any syntax errors. The parser does not check type or semantics. The parser was written for \texttt{ocamllex} and the AST was written in \texttt{OCaml}.
+\subsection{Semantic Analysis}
+The Semantic Analyzer parses the AST and checks the type and semantics of every statement. This produces a \textbf{SAST (Semantically-checked Abstract Syntax Tree)}. Each element in the SAST keeps track of its type for use in the java code generation. Any type mismatches or semantic errors will be reported during this step. The Semantic Analyzer and the SAST were written in \texttt{OCaml}.
+\subsection{Java Code Generation}
+The Java Code Generator parses the SAST and produces corresponding Java code for each statement. At this point the SAST should be fully syntactically and semantically sound, so there should be no errors produced. The java code generator was written in \texttt{OCaml}.
+
+\section{Test Plan}
+\subsection{Example Programs and Generated Code}
+\subsubsection{Holiday Calendar Example}
+The description of this example is described in \ref{sec:cal_example}.
+\textbf{FRY Source Code}
+\begin{lstlisting}
+# Checks if the date is valid (i.e. no Feb 30th)
+bool isValidDate(str mon, int day){
+  if ( day > 28 and mon == "Feb"){
+    ret false;
+  }
+  if ( day == 31 ){
+    if ( mon == "Sep" or mon == "Apr" or mon == "Jun" or mon == "Nov"){
+      ret false;
+    }
+    else {
+      ret true;
+    }
+  }
+  ret true;
+}
+# Define our file layout
+Layout date = {str: mon, int: day, int: year, str: holiday};
+
+# read in the file with the holiday listing
+Table holidays = Table (Layout date);
+holidays = Read("holidays.txt",",");
+
+str holiday_name;
+Table calendar = Table (Layout date);
+str List holiday_list;
+Table matching_days;
+
+# Generate a calendar, marking the holidays down
+for ( mon <- [ "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" ]){
+  for ( day <- [ 1 to 31 ]) {
+    if(isValidDate(mon, day)){
+        matching_days = [ i | i <- holidays; i.{mon} == mon and i.{day} == day ];
+        holiday_list = Column(matching_days, "holiday");
+        holiday_name = holiday_list[0];
+        Append(calendar, Layout date {mon, day, 2015,holiday_name});
+    }
+  }
+}
+
+Write("holiday-calendar.txt", calendar);
+\end{lstlisting}
+\textbf{Generated Java Code}
+
+\begin{lstlisting}[language=Java,
+basicstyle=\ttm,
+commentstyle=\color{comment}\ttm,
+otherkeywords={},             % Add keywords here
+keywordstyle=\ttb\color{deepblue},
+stringstyle=\color{deepgreen},
+frame=tb,                         % Any extra options here
+showstringspaces=false,            
+breaklines=true]
+import fry.*;
+import java.util.Arrays;
+import java.io.IOException;
+import java.util.ArrayList;
+
+public class fry {
+ public static class date extends FRYLayout {
+   public String mon;
+   public Integer day;
+   public Integer year;
+   public String holiday;
+    public date(String mon, Integer day, Integer year, String holiday) {
+      super();
+     this.holiday = holiday;
+     this.year = year;
+     this.day = day;
+     this.mon = mon;
+   }
+    public date() {
+     super();
+   }
+    public String toString() {
+     return mon.toString() + "|" + day.toString() + "|"
+         + year.toString() + "|" + holiday.toString();
+   }
+ }
+  public static Boolean isValidDate(String mon, Integer day) {
+   if (day > 28 && mon.equals("Feb")) {
+     return false;
+   }
+    if (day.equals(31)) {
+     if (mon.equals("Sep") || mon.equals("Apr") || mon.equals("Jun")
+         || mon.equals("Nov")) {
+       return false;
+     } else {
+       return true;
+     }
+    }
+    return true;
+ }
+  public static void main(String[] args) throws IOException {
+   ;
+   FRYTable holidays = new FRYTable(new date());
+   holidays.readInput(IOUtils.Read("holidays.txt", ","));
+   String holiday_name;
+   FRYTable calendar = new FRYTable(new date());
+   FRYList<String> holiday_list;
+   FRYTable matching_days;
+   for (String mon : new ArrayList<String>(Arrays.asList(
+       new String("Jan"), new String("Feb"), new String("Mar"),
+       new String("Apr"), new String("May"), new String("Jun"),
+       new String("Jul"), new String("Aug"), new String("Sep"),
+       new String("Oct"), new String("Nov"), new String("Dec")))) {
+     {
+       for (Integer day : FRYListFactory.getGeneratedFryList(1, 31)) {
+         {
+           if (isValidDate(mon, day)) {
+             FRYList<String[]> __ret_data__ = new FRYList<String[]>(
+                 holidays.getData().size());
+             for (String[] i : holidays.getData()) {
+                if ((((i[holidays.layout.getIdByName("mon")])))
+                   .equals(mon)
+                   && (new Integer(
+                       Integer.parseInt(i[holidays.layout
+                           .getIdByName("day")])))
+                       .equals(day)) {
+                 __ret_data__.add(i);
+               }
+             }
+             FRYTable __tmp_tbl__ = new FRYTable(__ret_data__,
+                 holidays.layout);
+             ;
+             matching_days = __tmp_tbl__;
+             ;
+             holiday_list = matching_days.getColumn("holiday");
+             holiday_name = holiday_list.get(0);
+             IOUtils.Append(calendar, new date(mon, day, 2015,
+                 holiday_name));
+           }
+          }
+       }
+     }
+   }
+   IOUtils.Write("holiday-calendar.txt", calendar);
+ }
+}
+\end{lstlisting}
 \end{document}
