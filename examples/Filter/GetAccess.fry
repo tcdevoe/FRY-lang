@@ -1,0 +1,11 @@
+Layout weblog = {str: date, str: site, str: user};
+Table weblog_data = Table (Layout weblog);
+weblog_data = Read("website_hits.txt","|");
+
+Table frodo_facebook = [i | i <- weblog_data; i.{site} == "facebook.com" and i.{user} == "Frodo"];
+Table sam_google = [i | i <- weblog_data; i.{site} == "google.com" and i.{user} == "Sam"];
+
+Write("frodo_facebook.txt", frodo_facebook);
+Write("sam_google.txt", sam_google);
+
+
