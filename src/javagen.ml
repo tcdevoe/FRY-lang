@@ -46,7 +46,7 @@ and j_expr = function
 |   S_BoolLit(b) -> b
 | 	S_ListGen(e1, e2) -> "FRYListFactory.getGeneratedFryList(" ^ j_expr e1 ^ "," ^ j_expr e2 ^ ")"
 (* Should determine the data type in the check pass and add it to the constructor *)
-| 	S_ListLit(l, typ) -> "new FRYList<"  ^ j_obj_data_type typ ^ ">(Arrays.asList(" ^ String.concat ", " (List.rev (List.map (fun e -> "new " ^ j_obj_data_type typ ^ "(" ^ j_expr e ^ ")") l)) ^ "))"
+| 	S_ListLit(l, typ) -> "new FRYList<"  ^ j_obj_data_type typ ^ ">(Arrays.asList(new  "^ j_obj_data_type typ ^ "[]{" ^ String.concat ", " (List.rev (List.map (fun e -> "(" ^ j_expr e ^ ")") l)) ^ "}))"
 |   S_Id(x,_) -> x
 |   S_Binop(e1, o, e2) -> writeBinOp e1 o e2 
 | 	S_Postop(e1, o) -> j_expr e1 ^ 
@@ -94,7 +94,7 @@ and writeAssign v e = match e with
 		(match f with 
 			"Read" -> v ^ ".readInput("^ j_expr e ^")" 
 		| 	_ ->  v ^ " = " ^ j_expr e)
-|   S_SetBuild(_,_,_,_) -> j_expr e ^";\n" ^ v ^ " = __tmp_tbl__;"
+|   S_SetBuild(_,_,_,_) -> "{" ^ j_expr e ^";\n" ^ v ^ " = __tmp_tbl__;}"
 |   _ -> v ^ " = " ^ j_expr e
 
 and elemForIO e = match e with S_Id("stdout", String) -> "IOUtils.stdout"
@@ -123,7 +123,7 @@ and writeWhileLoop (e: s_expr) (s: s_stmt) =
 and writeVarDecl = function
 	S_BasicDecl(d, e) -> (match e with S_Assign(v,e') -> 
 							(match e' with 
-							  S_SetBuild(_,_,_,_) -> j_expr e' ^"\n" ^ j_obj_data_type d ^ " " ^ v ^ " = __tmp_tbl__;"
+							  S_SetBuild(_,_,_,_) -> j_obj_data_type d ^ " " ^ v ^ ";{" ^ j_expr e' ^"\n" ^ v ^ " = __tmp_tbl__;}"
 							| _ -> j_obj_data_type d ^ " " ^ j_expr e ^ ";")
 						| _ -> j_obj_data_type d ^ " " ^ j_expr e ^ ";")
 |   S_ListDecl(d, e) ->  j_obj_data_type d ^ " " ^ j_expr e ^ ";"

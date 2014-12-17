@@ -6,7 +6,7 @@
 \usepackage{color}
 \usepackage{hyperref}
 \usepackage{fixltx2e}
-
+\usepackage[margin=0.75in]{geometry}
 
 % Default fixed font does not support bold face
 \DeclareFixedFont{\ttb}{T1}{txtt}{bx}{n}{10} % for bold
@@ -38,7 +38,7 @@ backgroundcolor=\color{codebg},
 language=Python,
 basicstyle=\ttm,
 commentstyle=\color{comment}\ttm,
-otherkeywords={Join, Sort, delim, Read, Write, ret, Layout, List, Table, true, false },             % Add keywords here
+otherkeywords={Join, Sort, Read, Write, ret, Layout, List, Table, true, false, Append },             % Add keywords here
 keywordstyle=\ttb\color{deepblue},
 stringstyle=\color{deepgreen},
 frame=tb,                         % Any extra options here
@@ -89,7 +89,18 @@ int List int_list = [ 1, 2, 3, 4, 5 ];
 The second initializes an integer list to a range of values. This list initializer takes two integers and generates an inclusive list of integers in that range.
 
 \begin{lstlisting}
-int int_list = [ 1 to 42 ];
+int List int_list = [ 1 to 42 ];
+\end{lstlisting}
+
+You can also use slicing to obtain subsets of lists. 
+
+\begin{lstlisting}
+# Obtains the first 30 elements
+int List int_sublist = int_list[:30]; 
+# Obtains the elements 12 to end
+int_sublist = int_list[12:];
+# Obtains elements 12 to 15
+int_sublist = int_list[12:15];
 \end{lstlisting}
 
 \subsubsection{Layouts}
@@ -272,6 +283,36 @@ Feb,16,2015,Washington BDay
 Feb,17,2015,
 ...
 \end{lstlisting}
+\subsubsection{Filtering Example}
+\label{sec:filt_example}
+This example reads a "|" delimited file which contains information about a number of website hits. This includes the user, site, and date of the access. The input, \textbf{website\_hits.txt} looks like this:
+\begin{lstlisting}
+...
+11-09-2010 06:48:12|facebook.com|Pippen
+07-06-2010 13:17:37|linkedin.com|Sam
+28-01-2010 01:56:19|google.com|Merry
+17-08-2010 22:09:24|twitter.com|Frodo
+25-03-2010 08:34:39|twitter.com|Frodo
+24-02-2010 04:26:52|facebook.com|Frodo
+09-09-2010 06:41:53|twitter.com|Pippen
+...
+\end{lstlisting}
+In this example, we want to filter out all of the Facebook accesses by Frodo and the Google accesses by Sam. This is a simple matter with FRY's set-builder notation:
+\begin{lstlisting}
+# Define source layout and read source data
+Layout weblog = {str: date, str: site, str: user};
+Table weblog_data = Table (Layout weblog);
+weblog_data = Read("website_hits.txt","|");
+
+# Filter required records
+Table frodo_facebook = [i | i <- weblog_data; i.{site} == "facebook.com" and i.{user} == "Frodo"];
+Table sam_google = [i | i <- weblog_data; i.{site} == "google.com" and i.{user} == "Sam"];
+
+# write out filtered records to respective files
+Write("frodo_facebook.txt", frodo_facebook);
+Write("sam_google.txt", sam_google);
+\end{lstlisting}
+This writes two files which contain the respective filtered outputs.
 \section{Language Reference Manual}
 \subsection{Lexical Conventions}
 % In C subsections are Tokens, Comments, Identifiers, Keywords, Constants
@@ -914,7 +955,7 @@ The Java Code Generator parses the SAST and produces corresponding Java code for
 \section{Test Plan}
 \subsection{Example Programs and Generated Code}
 \subsubsection{Holiday Calendar Example}
-The description of this example is described in \ref{sec:cal_example}.
+A more detailed description of this example is included in \ref{sec:cal_example}.
 \textbf{FRY Source Code}
 \begin{lstlisting}
 # Checks if the date is valid (i.e. no Feb 30th)
@@ -958,8 +999,8 @@ for ( mon <- [ "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "O
 
 Write("holiday-calendar.txt", calendar);
 \end{lstlisting}
+\vspace{5mm}
 \textbf{Generated Java Code}
-
 \begin{lstlisting}[language=Java,
 basicstyle=\ttm,
 commentstyle=\color{comment}\ttm,
@@ -1018,10 +1059,9 @@ public class fry {
    FRYList<String> holiday_list;
    FRYTable matching_days;
    for (String mon : new ArrayList<String>(Arrays.asList(
-       new String("Jan"), new String("Feb"), new String("Mar"),
-       new String("Apr"), new String("May"), new String("Jun"),
-       new String("Jul"), new String("Aug"), new String("Sep"),
-       new String("Oct"), new String("Nov"), new String("Dec")))) {
+  new  String[]{("Jan"), ("Feb"), ("Mar"), 
+  ("Apr"), ("May"), ("Jun"), ("Jul"), ("Aug"), 
+  ("Sep"), ("Oct"), ("Nov"), ("Dec")}))) {
      {
        for (Integer day : FRYListFactory.getGeneratedFryList(1, 31)) {
          {
@@ -1056,4 +1096,307 @@ public class fry {
  }
 }
 \end{lstlisting}
+
+
+\subsubsection{Filtering Example}
+A more detailed description of this example is included in \ref{sec:filt_example}.
+\textbf{FRY Source Code}
+\begin{lstlisting}
+# Define source layout and read source data
+Layout weblog = {str: date, str: site, str: user};
+Table weblog_data = Table (Layout weblog);
+weblog_data = Read("website_hits.txt","|");
+
+# Filter required records
+Table frodo_facebook = [i | i <- weblog_data; i.{site} == "facebook.com" and i.{user} == "Frodo"];
+Table sam_google = [i | i <- weblog_data; i.{site} == "google.com" and i.{user} == "Sam"];
+
+# write out filtered records to respective files
+Write("frodo_facebook.txt", frodo_facebook);
+Write("sam_google.txt", sam_google);
+\end{lstlisting}
+\vspace{5 mm}
+\textbf{Generated Java Code}
+\begin{lstlisting}[language=Java,
+basicstyle=\ttm,
+commentstyle=\color{comment}\ttm,
+otherkeywords={},             % Add keywords here
+keywordstyle=\ttb\color{deepblue},
+stringstyle=\color{deepgreen},
+frame=tb,                         % Any extra options here
+showstringspaces=false,            
+breaklines=true]
+package fry;
+import java.util.Arrays;
+import java.io.IOException;
+import java.util.ArrayList;
+
+public class mainTest {
+  public static class weblog extends FRYLayout {
+    public String date;
+    public String site;
+    public String user;
+
+    public weblog(String date, String site, String user) {
+
+      super();
+      this.user = user;
+      this.site = site;
+      this.date = date;
+    }
+
+    public weblog() {
+      super();
+    }
+    
+    public String toString() {
+      return date.toString() + "|" + site.toString() + "|"
+          + user.toString();
+    }
+  }
+
+  public static void main(String[] args) throws IOException {
+    ;
+    FRYTable weblog_data = new FRYTable(new weblog());
+    weblog_data.readInput(IOUtils.Read("website_hits.txt", "|"));
+    FRYTable frodo_facebook;
+    {
+      FRYList<String[]> __ret_data__ = new FRYList<String[]>(weblog_data
+          .getData().size());
+      for (String[] i : weblog_data.getData()) {
+
+        if ((((i[weblog_data.layout.getIdByName("site")])))
+            .equals("facebook.com")
+            && (((i[weblog_data.layout.getIdByName("user")])))
+                .equals("Frodo")) {
+          __ret_data__.add(i);
+        }
+      }
+      FRYTable __tmp_tbl__ = new FRYTable(__ret_data__,
+          weblog_data.layout);
+      frodo_facebook = __tmp_tbl__;
+    }
+    FRYTable sam_google;
+    {
+      FRYList<String[]> __ret_data__ = new FRYList<String[]>(weblog_data
+          .getData().size());
+      for (String[] i : weblog_data.getData()) {
+
+        if ((((i[weblog_data.layout.getIdByName("site")])))
+            .equals("google.com")
+            && (((i[weblog_data.layout.getIdByName("user")])))
+                .equals("Sam")) {
+          __ret_data__.add(i);
+        }
+      }
+      FRYTable __tmp_tbl__ = new FRYTable(__ret_data__,
+          weblog_data.layout);
+      sam_google = __tmp_tbl__;
+    }
+    IOUtils.Write("frodo_facebook.txt", frodo_facebook);
+    IOUtils.Write("sam_google.txt", sam_google);
+  }
+}
+\end{lstlisting}
+
+\subsection{Test Suite}
+All testing performed was functional testing. Every time a new functionality was added to FRY, I added in a few tests to test that functionality. A shell script was written which automated running through these tests. The shell script compiles and executes a specific program, and diffs the output of execution against the expected output. If an error occured in any of the phases (compilation, java compilation, execution), the error would be caught an printed to stdout. The source code for the testing driver script - \textbf{run\_tests.sh} are located here \ref{ref:runtests} - and all of the tests are located here \ref{ref:tests}.
+
+\section{Lessons Learned}
+
+\section{Appendix}
+All modules were built by Tom DeVoe.
+\\\\
+{\large \textbf{Makefile}}
+\lstinputlisting[language=Make,tabsize=1,basicstyle=\ttm,commentstyle=\color{comment}\ttm,otherkeywords={},
+keywordstyle=\ttb\color{deepblue},
+stringstyle=\color{deepgreen},
+frame=tb,
+showstringspaces=false,
+breaklines=true]{"C:/Users/tdevoe/Documents/Columbia/FRY-lang/src/Makefile.cpy"}
+{\large \textbf{ast.ml}}
+\lstinputlisting[language=Caml,tabsize=1,basicstyle=\ttm,commentstyle=\color{comment}\ttm,otherkeywords={},
+keywordstyle=\ttb\color{deepblue},
+stringstyle=\color{deepgreen},
+frame=tb,
+showstringspaces=false,
+breaklines=true]{"C:/Users/tdevoe/Documents/Columbia/FRY-lang/src/ast.ml"}
+{\large \textbf{fry.ml}}
+\lstinputlisting[language=Caml,tabsize=1,basicstyle=\ttm,commentstyle=\color{comment}\ttm,otherkeywords={},
+keywordstyle=\ttb\color{deepblue},
+stringstyle=\color{deepgreen},
+frame=tb,
+showstringspaces=false,
+breaklines=true]{"C:/Users/tdevoe/Documents/Columbia/FRY-lang/src/fry.ml"}
+{\large \textbf{javagen.ml}}
+\lstinputlisting[language=Caml,tabsize=1,basicstyle=\ttm,commentstyle=\color{comment}\ttm,otherkeywords={},
+keywordstyle=\ttb\color{deepblue},
+stringstyle=\color{deepgreen},
+frame=tb,
+showstringspaces=false,
+breaklines=true]{"C:/Users/tdevoe/Documents/Columbia/FRY-lang/src/javagen.ml"}
+{\large \textbf{parser.mly}}
+\lstinputlisting[language=Caml,tabsize=1,basicstyle=\ttm,commentstyle=\color{comment}\ttm,otherkeywords={},
+keywordstyle=\ttb\color{deepblue},
+stringstyle=\color{deepgreen},
+frame=tb,
+showstringspaces=false,
+breaklines=true]{"C:/Users/tdevoe/Documents/Columbia/FRY-lang/src/parser.mly"}
+{\large \textbf{sast.mli}}
+\lstinputlisting[language=Caml,tabsize=1,basicstyle=\ttm,commentstyle=\color{comment}\ttm,otherkeywords={},
+keywordstyle=\ttb\color{deepblue},
+stringstyle=\color{deepgreen},
+frame=tb,
+showstringspaces=false,
+breaklines=true]{"C:/Users/tdevoe/Documents/Columbia/FRY-lang/src/sast.mli"}
+{\large \textbf{scanner.mll}}
+\lstinputlisting[language=Caml,tabsize=1,basicstyle=\ttm,commentstyle=\color{comment}\ttm,otherkeywords={},
+keywordstyle=\ttb\color{deepblue},
+stringstyle=\color{deepgreen},
+frame=tb,
+showstringspaces=false,
+breaklines=true]{"C:/Users/tdevoe/Documents/Columbia/FRY-lang/src/scanner.mll"}
+{\large \textbf{SemanticAnalysis.ml}}
+\lstinputlisting[language=Caml,tabsize=1,basicstyle=\ttm,commentstyle=\color{comment}\ttm,otherkeywords={},
+keywordstyle=\ttb\color{deepblue},
+stringstyle=\color{deepgreen},
+frame=tb,
+showstringspaces=false,
+breaklines=true]{"C:/Users/tdevoe/Documents/Columbia/FRY-lang/src/SemanticAnalysis.ml"}
+{\large \textbf{FRYLayout.java}}
+\lstinputlisting[language=Java,tabsize=1,basicstyle=\ttm,commentstyle=\color{comment}\ttm,otherkeywords={},
+keywordstyle=\ttb\color{deepblue},
+stringstyle=\color{deepgreen},
+frame=tb,
+showstringspaces=false,
+breaklines=true]{"C:/Users/tdevoe/Documents/Columbia/FRY-lang/src/java/fry/fry/FRYLayout.java"}
+{\large \textbf{FRYListFactory.java}}
+\lstinputlisting[language=Java,tabsize=1,basicstyle=\ttm,commentstyle=\color{comment}\ttm,otherkeywords={},
+keywordstyle=\ttb\color{deepblue},
+stringstyle=\color{deepgreen},
+frame=tb,
+showstringspaces=false,
+breaklines=true]{"C:/Users/tdevoe/Documents/Columbia/FRY-lang/src/java/fry/fry/FRYListFactory.java"}
+{\large \textbf{FRYList.java}}
+\lstinputlisting[language=Java,tabsize=1,basicstyle=\ttm,commentstyle=\color{comment}\ttm,otherkeywords={},
+keywordstyle=\ttb\color{deepblue},
+stringstyle=\color{deepgreen},
+frame=tb,
+showstringspaces=false,
+breaklines=true]{"C:/Users/tdevoe/Documents/Columbia/FRY-lang/src/java/fry/fry/FRYList.java"}
+{\large \textbf{FRYTable.java}}
+\lstinputlisting[language=Java,tabsize=1,basicstyle=\ttm,commentstyle=\color{comment}\ttm,otherkeywords={},
+keywordstyle=\ttb\color{deepblue},
+stringstyle=\color{deepgreen},
+frame=tb,
+showstringspaces=false,
+breaklines=true]{"C:/Users/tdevoe/Documents/Columbia/FRY-lang/src/java/fry/fry/FRYTable.java"}
+{\large \textbf{InputFile.java}}
+\lstinputlisting[language=Java,tabsize=1,basicstyle=\ttm,commentstyle=\color{comment}\ttm,otherkeywords={},
+keywordstyle=\ttb\color{deepblue},
+stringstyle=\color{deepgreen},
+frame=tb,
+showstringspaces=false,
+breaklines=true]{"C:/Users/tdevoe/Documents/Columbia/FRY-lang/src/java/fry/fry/InputFile.java"}
+{\large \textbf{IOUtils.java}}
+\lstinputlisting[language=Java,tabsize=1,basicstyle=\ttm,commentstyle=\color{comment}\ttm,otherkeywords={},
+keywordstyle=\ttb\color{deepblue},
+stringstyle=\color{deepgreen},
+frame=tb,
+showstringspaces=false,
+breaklines=true]{"C:/Users/tdevoe/Documents/Columbia/FRY-lang/src/java/fry/fry/IOUtils.java"}
+\label{ref:runtests}
+{\large \textbf{run\_tests.sh}}
+\lstinputlisting[language=bash,tabsize=1,basicstyle=\ttm,commentstyle=\color{comment}\ttm,otherkeywords={},
+keywordstyle=\ttb\color{deepblue},
+stringstyle=\color{deepgreen},
+frame=tb,
+showstringspaces=false,
+breaklines=true]{"C:/Users/tdevoe/Documents/Columbia/FRY-lang/utils/run_tests.sh"}
+\label{ref:tests}
+{\large \textbf{arith\_test01.fry}}
+\lstinputlisting{"C:/Users/tdevoe/Documents/Columbia/FRY-lang/testing/arith_test01.fry"}
+{\large \textbf{arith\_test01.out}}
+\lstinputlisting{"C:/Users/tdevoe/Documents/Columbia/FRY-lang/testing/arith_test01.out"}
+{\large \textbf{cond\_test01.fry}}
+\lstinputlisting{"C:/Users/tdevoe/Documents/Columbia/FRY-lang/testing/cond_test01.fry"}
+{\large \textbf{cond\_test01.out}}
+\lstinputlisting{"C:/Users/tdevoe/Documents/Columbia/FRY-lang/testing/cond_test01.out"}
+{\large \textbf{cond\_test02.fry}}
+\lstinputlisting{"C:/Users/tdevoe/Documents/Columbia/FRY-lang/testing/cond_test02.fry"}
+{\large \textbf{cond\_test02.out}}
+\lstinputlisting{"C:/Users/tdevoe/Documents/Columbia/FRY-lang/testing/cond_test02.out"}
+{\large \textbf{func\_test01.fry}}
+\lstinputlisting{"C:/Users/tdevoe/Documents/Columbia/FRY-lang/testing/func_test01.fry"}
+{\large \textbf{func\_test01.out}}
+\lstinputlisting{"C:/Users/tdevoe/Documents/Columbia/FRY-lang/testing/func_test01.out"}
+{\large \textbf{func\_test02.fry}}
+\lstinputlisting{"C:/Users/tdevoe/Documents/Columbia/FRY-lang/testing/func_test02.fry"}
+{\large \textbf{func\_test02.out}}
+\lstinputlisting{"C:/Users/tdevoe/Documents/Columbia/FRY-lang/testing/func_test02.out"}
+{\large \textbf{func\_test03.fry}}
+\lstinputlisting{"C:/Users/tdevoe/Documents/Columbia/FRY-lang/testing/func_test03.fry"}
+{\large \textbf{func\_test03.out}}
+\lstinputlisting{"C:/Users/tdevoe/Documents/Columbia/FRY-lang/testing/func_test03.out"}
+{\large \textbf{func\_test04.fry}}
+\lstinputlisting{"C:/Users/tdevoe/Documents/Columbia/FRY-lang/testing/func_test04.fry"}
+{\large \textbf{func\_test04.out}}
+\lstinputlisting{"C:/Users/tdevoe/Documents/Columbia/FRY-lang/testing/func_test04.out"}
+{\large \textbf{layout\_test01.fry}}
+\lstinputlisting{"C:/Users/tdevoe/Documents/Columbia/FRY-lang/testing/layout_test01.fry"}
+{\large \textbf{layout\_test01.out}}
+\lstinputlisting{"C:/Users/tdevoe/Documents/Columbia/FRY-lang/testing/layout_test01.out"}
+{\large \textbf{layout\_test02.fry}}
+\lstinputlisting{"C:/Users/tdevoe/Documents/Columbia/FRY-lang/testing/layout_test02.fry"}
+{\large \textbf{layout\_test02.out}}
+\lstinputlisting{"C:/Users/tdevoe/Documents/Columbia/FRY-lang/testing/layout_test02.out"}
+{\large \textbf{layout\_test03.fry}}
+\lstinputlisting{"C:/Users/tdevoe/Documents/Columbia/FRY-lang/testing/layout_test03.fry"}
+{\large \textbf{layout\_test03.out}}
+\lstinputlisting{"C:/Users/tdevoe/Documents/Columbia/FRY-lang/testing/layout_test03.out"}
+{\large \textbf{list\_test01.fry}}
+\lstinputlisting{"C:/Users/tdevoe/Documents/Columbia/FRY-lang/testing/list_test01.fry"}
+{\large \textbf{list\_test01.out}}
+\lstinputlisting{"C:/Users/tdevoe/Documents/Columbia/FRY-lang/testing/list_test01.out"}
+{\large \textbf{list\_test02.fry}}
+\lstinputlisting{"C:/Users/tdevoe/Documents/Columbia/FRY-lang/testing/list_test02.fry"}
+{\large \textbf{list\_test02.out}}
+\lstinputlisting{"C:/Users/tdevoe/Documents/Columbia/FRY-lang/testing/list_test02.out"}
+{\large \textbf{loop\_test01.fry}}
+\lstinputlisting{"C:/Users/tdevoe/Documents/Columbia/FRY-lang/testing/loop_test01.fry"}
+{\large \textbf{loop\_test01.out}}
+\lstinputlisting{"C:/Users/tdevoe/Documents/Columbia/FRY-lang/testing/loop_test01.out"}
+{\large \textbf{loop\_test02.fry}}
+\lstinputlisting{"C:/Users/tdevoe/Documents/Columbia/FRY-lang/testing/loop_test02.fry"}
+{\large \textbf{loop\_test02.out}}
+\lstinputlisting{"C:/Users/tdevoe/Documents/Columbia/FRY-lang/testing/loop_test02.out"}
+{\large \textbf{loop\_test03.fry}}
+\lstinputlisting{"C:/Users/tdevoe/Documents/Columbia/FRY-lang/testing/loop_test03.fry"}
+{\large \textbf{loop\_test03.out}}
+\lstinputlisting{"C:/Users/tdevoe/Documents/Columbia/FRY-lang/testing/loop_test03.out"}
+{\large \textbf{loop\_test04.fry}}
+\lstinputlisting{"C:/Users/tdevoe/Documents/Columbia/FRY-lang/testing/loop_test04.fry"}
+{\large \textbf{loop\_test04.out}}
+\lstinputlisting{"C:/Users/tdevoe/Documents/Columbia/FRY-lang/testing/loop_test04.out"}
+{\large \textbf{loop\_test05.fry}}
+\lstinputlisting{"C:/Users/tdevoe/Documents/Columbia/FRY-lang/testing/loop_test05.fry"}
+{\large \textbf{loop\_test05.out}}
+\lstinputlisting{"C:/Users/tdevoe/Documents/Columbia/FRY-lang/testing/loop_test05.out"}
+{\large \textbf{table\_test01.fry}}
+\lstinputlisting{"C:/Users/tdevoe/Documents/Columbia/FRY-lang/testing/table_test01.fry"}
+{\large \textbf{table\_test01.in}}
+\lstinputlisting{"C:/Users/tdevoe/Documents/Columbia/FRY-lang/testing/table_test01.in"}
+{\large \textbf{table\_test01.out}}
+\lstinputlisting{"C:/Users/tdevoe/Documents/Columbia/FRY-lang/testing/table_test01.out"}
+{\large \textbf{table\_test02.fry}}
+\lstinputlisting{"C:/Users/tdevoe/Documents/Columbia/FRY-lang/testing/table_test02.fry"}
+{\large \textbf{table\_test02.in}}
+\lstinputlisting{"C:/Users/tdevoe/Documents/Columbia/FRY-lang/testing/table_test02.in"}
+{\large \textbf{table\_test02.out}}
+\lstinputlisting{"C:/Users/tdevoe/Documents/Columbia/FRY-lang/testing/table_test02.out"}
+{\large \textbf{table\_test03.fry}}
+\lstinputlisting{"C:/Users/tdevoe/Documents/Columbia/FRY-lang/testing/table_test03.fry"}
+{\large \textbf{table\_test03.out}}
+\lstinputlisting{"C:/Users/tdevoe/Documents/Columbia/FRY-lang/testing/table_test03.out"}
+
 \end{document}

@@ -1,8 +1,5 @@
 package fry;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-
 public class FRYListFactory{
 
 	public static FRYList<Integer> getGeneratedFryList(int min, int max){

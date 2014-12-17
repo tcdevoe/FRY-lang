@@ -209,7 +209,7 @@ and find_func_signature (f: string) (opts: (s_expr * dataType) list) (ret_funcs:
 	(* Check function opts *)
 	try 
 		match ret_funcs with 
-						[] -> raise (Error("No signature matches function call "^f))
+						[] -> raise (Error("No signature matches for function call "^f))
 					|	hd::tl -> let forms = hd.formals in 
 									let sexpr = List.map2 (fun (opt: s_expr * dataType) (form: s_var_decl) -> 
 									let opt_typ = snd opt in
@@ -518,7 +518,7 @@ let check_fdecl (func: Ast.func_decl) (env: translation_environment) : (s_func_d
 	else
 		let env' = { env with scope = {parent = Some(env.scope); variables = [(String, "stdout", S_Noexpr); (String, "stderr", S_Noexpr)]; layouts=env.scope.layouts; tables=env.scope.tables;}; 
 		return_type = func.ret_type; in_func = true} in 
-		let formals = (List.rev (List.map (fun x -> check_formals x env') func.formals)) in print_sym_tbl env'.scope;
+		let formals = (List.rev (List.map (fun x -> check_formals x env') func.formals)) in 
 		let f = { Sast.fname = func.fname; Sast.ret_type = func.ret_type; Sast.formals = formals; Sast.body = (List.map (fun x -> check_stmt x env') func.body );} in
 		env.funcs <- f::env.funcs; f
 	   	

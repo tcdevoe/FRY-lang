@@ -47,7 +47,7 @@ String holiday_name;
 FRYTable calendar = new FRYTable( new date() );
 FRYList<String> holiday_list;
 FRYTable matching_days;
-for (String mon: new ArrayList<String>(Arrays.asList(new String("Jan"), new String("Feb"), new String("Mar"), new String("Apr"), new String("May"), new String("Jun"), new String("Jul"), new String("Aug"), new String("Sep"), new String("Oct"), new String("Nov"), new String("Dec")))) {
+for (String mon: new FRYList<String>(Arrays.asList(new  String[]{("Jan"), ("Feb"), ("Mar"), ("Apr"), ("May"), ("Jun"), ("Jul"), ("Aug"), ("Sep"), ("Oct"), ("Nov"), ("Dec")}))) {
 {
 for (Integer day: FRYListFactory.getGeneratedFryList(1,31)) {
 {
