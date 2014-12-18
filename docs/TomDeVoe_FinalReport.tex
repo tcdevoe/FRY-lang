@@ -50,6 +50,42 @@ As data becomes cheaper to store and more readily available, there is a need for
 At its core, FRY is an imperative, staticly-typed language built to process delimited text files. Once these delimited text files are read into a FRY program, you can perform any number of transformations on this data using built-in or user defined functions, or using FRY's set-builder notation, which allows for concise statements to transform data. 
 
 \section{Language Tutorial}
+\subsection{Environment Setup}
+Since FRY compiles to Java, it should run on any machine which has Java 7 or greater installed. However, the FRY compiler wrapper scripts will only work in an environment with \textbf{sh}.
+\begin{itemize}
+\item Add the FRY Standard Library JAR to your classpath. 
+\item Add the FRY binaries to your PATH
+\end{itemize}
+\subsection{Compiling and Running FRY Programs}
+FRY includes two helper scripts which allow you to compile and run easily. To compile, simply run (assuming compile\_fry.sh is in your path):
+\begin{lstlisting}[language=bash,tabsize=1,basicstyle=\ttm,commentstyle=\color{comment}\ttm,otherkeywords={},
+keywordstyle=\ttb\color{deepblue},
+stringstyle=\color{deepgreen},
+frame=tb,
+showstringspaces=false,
+breaklines=true]
+compile_fry.sh my_program.fry
+\end{lstlisting}
+Where \textbf{my\_program.fry} would be replaced by the name of the FRY program you would like to compile. This will generate \textbf{fry.class} and then you need to just run \textbf{java fry} to execute your program. Similarly, to compile and run a FRY program, you just need to run:
+
+\begin{lstlisting}[language=bash,tabsize=1,basicstyle=\ttm,commentstyle=\color{comment}\ttm,otherkeywords={},
+keywordstyle=\ttb\color{deepblue},
+stringstyle=\color{deepgreen},
+frame=tb,
+showstringspaces=false,
+breaklines=true]
+run_fry.sh my_program.fry
+\end{lstlisting}
+Alternatively, you can use the FRY compiler directly, which just compiles to the java program. To do this, you only need to run the command:
+\begin{lstlisting}[language=bash,tabsize=1,basicstyle=\ttm,commentstyle=\color{comment}\ttm,otherkeywords={},
+keywordstyle=\ttb\color{deepblue},
+stringstyle=\color{deepgreen},
+frame=tb,
+showstringspaces=false,
+breaklines=true]
+fry -c < my_program.fry
+\end{lstlisting}
+
 \subsection{Basic Types}
 FRY supports the primitive types \textbf{bool}, \textbf{str}, \textbf{int}, and \textbf{float}. To declare a basic variable, you just need type the type specifier followed by the identifier, like so:
 
@@ -1204,6 +1240,13 @@ All testing performed was functional testing. Every time a new functionality was
 
 \section{Lessons Learned}
 
+When I first learned we had to create our own programming language and compiler, it sounded impossible. And in fact, working on this project only reinforced that notion. While I managed somehow to come out of this class with a (somewhat) working compiler for FRY, the amount of effort needed to implement even the most basic compiler was fairly surprising. At the least, it put things in perspective and taught me just how much effort has gone into GCC, the Java Compiler, even the Bash interpreter; and how involved these pieces of software really are. The fact that they work so consistently, that they are able to do all of these optimizations, and still compile thousands of source files quickly is a small miracle. 
+
+While I did not get the same experience of people working in teams (which is probably not such a big deal, since I do that at work every day), working on a relatively large scale program on my own definitely taught my a thing or two. I definitely felt as though I needed to rush to complete this compiler. Because of that, from the start I implemented some things in a pretty kludgy fashion, and did plenty of things the quick and dirty way. Unfortunately, that mind set turned out to be somewhat "Penny-wise, Pound-foolish" as I eventually paid for my mostly comment-less spaghetti code. Going back and changing certain things became much more painful than it needed to be. I realized it is worthwhile to write clean, maintainable code, even for a relatively short-term project where I was rushing. Had I done that, I may have been able to do \emph{more} over the semester than I accomplished. Something I really came to appreciate was the automated testing. The amount of bugs I introduced would have wreaked havoc had they not been caught by frequent test cycles. 
+
+
+
+
 \section{Appendix}
 All modules were built by Tom DeVoe.
 \\\\
@@ -1305,6 +1348,20 @@ stringstyle=\color{deepgreen},
 frame=tb,
 showstringspaces=false,
 breaklines=true]{"C:/Users/tdevoe/Documents/Columbia/FRY-lang/src/java/fry/fry/IOUtils.java"}
+{\large \textbf{run\_fry.sh}}
+\lstinputlisting[language=bash,tabsize=1,basicstyle=\ttm,commentstyle=\color{comment}\ttm,otherkeywords={},
+keywordstyle=\ttb\color{deepblue},
+stringstyle=\color{deepgreen},
+frame=tb,
+showstringspaces=false,
+breaklines=true]{"C:/Users/tdevoe/Documents/Columbia/FRY-lang/src/run_fry.sh"}
+{\large \textbf{compile\_fry.sh}}
+\lstinputlisting[language=bash,tabsize=1,basicstyle=\ttm,commentstyle=\color{comment}\ttm,otherkeywords={},
+keywordstyle=\ttb\color{deepblue},
+stringstyle=\color{deepgreen},
+frame=tb,
+showstringspaces=false,
+breaklines=true]{"C:/Users/tdevoe/Documents/Columbia/FRY-lang/src/compile_fry.sh"}
 \label{ref:runtests}
 {\large \textbf{run\_tests.sh}}
 \lstinputlisting[language=bash,tabsize=1,basicstyle=\ttm,commentstyle=\color{comment}\ttm,otherkeywords={},

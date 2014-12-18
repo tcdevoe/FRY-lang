@@ -53,12 +53,12 @@ for (Integer day: FRYListFactory.getGeneratedFryList(1,31)) {
 {
 if ( isValidDate(mon, day))
 {
-FRYList<String[]>  __ret_data__ = new FRYList<String[]>(holidays.getData().size());
+{FRYList<String[]>  __ret_data__ = new FRYList<String[]>(holidays.getData().size());
 for(String[] i : holidays.getData()){
 
 if((((i[holidays.layout.getIdByName("mon")]))).equals(mon) &&(new Integer(Integer.parseInt(i[holidays.layout.getIdByName("day")]))).equals(day) ){ __ret_data__.add(i);}
 }FRYTable __tmp_tbl__  = new FRYTable(__ret_data__,holidays.layout);;
-matching_days = __tmp_tbl__;;
+matching_days = __tmp_tbl__;};
 holiday_list = matching_days.getColumn("holiday");
 holiday_name = holiday_list.get(0);
 IOUtils.Append(calendar, new date (mon,day,2015,holiday_name));
